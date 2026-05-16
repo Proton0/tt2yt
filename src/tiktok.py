@@ -1,0 +1,111 @@
+"""
+tt2yt: TikTok to YouTube Uploader
+
+Copyright (C) 2026 Proton0
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU General Public License for more details.
+
+"""
+
+import sys
+from pathlib import Path
+
+from yt_dlp import YoutubeDL
+
+DOWNLOAD_DIR = Path("downloads")
+
+
+class TikTok:
+    def __init__(self, tiktok_profile: str):
+        if not tiktok_profile.startswith("http"):
+            self.tiktok_profile = f"https://www.tiktok.com/@{tiktok_profile.lstrip('@')}"
+        else:
+            self.tiktok_profile = tiktok_profile
+
+        self.headers = {
+            'User-Agent': (
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                'AppleWebKit/537.36 (KHTML, like Gecko) '
+                'Chrome/120.0.0.0 Safari/537.36'
+            )
+        }
+
+    def get_videos(self) -> list[dict]:
+        print("Getting tiktok videos...")
+        ydl_opts = {
+            'extract_flat': True,
+            'playlistend': 10,
+            'skip_download': True,
+            'quiet': False,
+            'no_warnings': False,
+            'http_headers': self.headers
+        }
+
+        try:
+            with YoutubeDL(ydl_opts) as ydl:
+                profile_data = ydl.extract_info(self.tiktok_profile, download=False)
+
+                if not profile_data or 'entries' not in profile_data:
+                    print("No videos found or failed to parse profile metadata.", file=sys.stderr)
+                    return []
+
+                videos = []
+                for entry in profile_data['entries']:
+                    if not entry:
+                        continue
+
+                    videos.append({
+                        'id': entry.get('id'),
+                        'url': entry.get('url'),
+                        'title': entry.get('title'),
+                        'duration': entry.get('duration')
+                    })
+
+                return videos
+
+        except Exception as e:
+            print(f"Error extracting TikTok profile data: {e}", file=sys.stderr)
+            return []
+
+    def download_video(self, video_id: str) -> str | None:
+        DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
+        video_url = f"https://www.tiktok.com/@vproton0/video/{video_id}"
+        output_template = str(DOWNLOAD_DIR / "%(id)s.%(ext)s")
+
+        ydl_opts = {
+            'format': 'bestvideo+bestaudio/best',
+            'outtmpl': output_template,
+            'quiet': False,
+            'no_warnings': False,
+            'http_headers': self.headers
+        }
+
+        print(f"\nDownloading video {video_id}...")
+
+        try:
+            with YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(video_url, download=True)
+                downloaded_file = ydl.prepare_filename(info)
+
+                return downloaded_file
+
+        except Exception as e:
+            print(f"Error downloading video {video_id}: {e}", file=sys.stderr)
+            return None
+
+
+if __name__ == "__main__":
+    scraper = TikTok("vproton0")
+    latest_videos = scraper.get_videos()
+
+    print(f"\nRetrieved {len(latest_videos)} items:")
+    for idx, vid in enumerate(latest_videos, 1):
+        print(f"{idx}. [{vid['id']}] -> {vid['title'][:40]}...")
