@@ -84,6 +84,7 @@ class YouTube:
         media = MediaFileUpload(file_path, chunksize=1024 * 1024, resumable=True)
 
         try:
+            print("Uploading the video now")
             request = self.youtube.videos().insert(
                 part="snippet,status",
                 body=body,
