@@ -48,6 +48,8 @@ class OpenRouter:
                         "engaging video descriptions based on titles. Provide ONLY the final text "
                         "description block. Do not include any introductory remarks, explanations, "
                         "or meta-commentary like 'Here is your description'."
+                        ""
+                        "The description should be concise, around 1-2 sentences, and designed to entice viewers to click on the video. "
                     )
                 },
                 {
@@ -80,7 +82,9 @@ class OpenRouter:
 
 
 if __name__ == "__main__":
-    API_KEY = "you-aint-getting-my-api-key-lmao"
+    import json
+    f = open("secrets/secrets.json", "r")
+    API_KEY = json.load(f)["openrouter_key"]
     ai = OpenRouter(API_KEY)
-    desc = ai.generate_description("Building a bare-metal ESP32 OS from scratch!")
+    desc = ai.generate_description("")
     print(f"\nGenerated Description Output:\n{desc}")
