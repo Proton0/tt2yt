@@ -26,7 +26,7 @@ DOWNLOAD_DIR = Path("downloads")
 class TikTok:
     def __init__(self, tiktok_profile: str):
         if not tiktok_profile.startswith("http"):
-            self.tiktok_profile = f"https://www.tiktok.com/@{tiktok_profile.lstrip('@')}"
+            self.tiktok_profile = f"{tiktok_profile.lstrip('@')}"
         else:
             self.tiktok_profile = tiktok_profile
 
@@ -44,14 +44,14 @@ class TikTok:
             'extract_flat': True,
             'playlistend': 10,
             'skip_download': True,
-            'quiet': False,
+            'quiet': True,
             'no_warnings': False,
             'http_headers': self.headers
         }
 
         try:
             with YoutubeDL(ydl_opts) as ydl:
-                profile_data = ydl.extract_info(self.tiktok_profile, download=False)
+                profile_data = ydl.extract_info(f"https://tiktok.com/@{self.tiktok_profile}", download=False)
 
                 if not profile_data or 'entries' not in profile_data:
                     print("No videos found or failed to parse profile metadata.", file=sys.stderr)
@@ -77,13 +77,13 @@ class TikTok:
 
     def download_video(self, video_id: str) -> str | None:
         DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
-        video_url = f"https://www.tiktok.com/@vproton0/video/{video_id}"
+        video_url = f"https://www.tiktok.com/@{self.tiktok_profile}/video/{video_id}"
         output_template = str(DOWNLOAD_DIR / "%(id)s.%(ext)s")
 
         ydl_opts = {
             'format': 'bestvideo+bestaudio/best',
             'outtmpl': output_template,
-            'quiet': False,
+            'quiet': True,
             'no_warnings': False,
             'http_headers': self.headers
         }
