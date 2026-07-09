@@ -24,16 +24,30 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
+from google.auth.exceptions import RefreshError
+
 
 SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 TOKEN_FILE = Path("secrets/token.json")
 
 
+
 class YouTube:
     def __init__(self, client_secrets_file: str):
         self.client_secrets_file = client_secrets_file
-        self.credentials = self._authenticate()
-        self.youtube = build("youtube", "v3", credentials=self.credentials)
+
+        try:
+            self.credentials = self._authenticate()
+            self.youtube = build("youtube", "v3", credentials=self.credentials)
+
+        except RefreshError as e:
+            print(f"YouTube login has expired, Please authenticate again. (exception: {e})")
+
+            if os.path.exists("secrets/token.json"):
+                os.remove("secrets/token.json")
+
+            print("Please re-run tt2yt to reauthenticate.")
+            raise
 
     def _authenticate(self) -> Credentials:
         print("Authenticating with Google")
