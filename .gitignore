@@ -7,4 +7,4 @@ secrets/secrets.json
 secrets/token.json
 secrets/client_secrets.json
 secrets/*
-
+.DS_Store
