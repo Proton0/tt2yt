@@ -52,7 +52,7 @@ else
     fi
 fi
 
-echo "Setup complete. Running tt2yt..."
+echo "Environment setup complete, Running tt2yt"
 
 # Build command
 CMD=(python3 src/main.py)

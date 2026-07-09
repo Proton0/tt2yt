@@ -80,12 +80,17 @@ class YouTube:
 
     def upload_video(self, file_path: str, title: str, description: str = "") -> str | None:
         print("Preparing to upload video")
-        if "#shorts" not in title.lower():
-            title = f"{title} #shorts"
+
+        tag = " #shorts"
+        if tag.strip().lower() not in title.lower():
+            max_title_len = 100 - len(tag)
+            title = f"{title[:max_title_len]}{tag}"
+        else:
+            title = title[:100]
 
         body = {
             "snippet": {
-                "title": title[:100],  # YouTube Max Title limit restriction
+                "title": title,
                 "description": description or "#shorts #techtok #technology #tech",
                 "categoryId": "28"
             },

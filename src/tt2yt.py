@@ -18,12 +18,30 @@ See the GNU General Public License for more details.
 import os
 import sys
 import time
+from zipfile import Path
 
 from openrouter import OpenRouter
 from tiktok import TikTok
 from tracker import UploadTracker
 from youtube import YouTube
+import subprocess
 
+AUDIO_EXTENSIONS = ('.mp3', '.m4a', '.wav')
+
+def get_git_data():
+    try:
+        commit_hash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
+        branch_name = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).decode("utf-8").strip()
+        
+        try:
+            current_tag = subprocess.check_output(["git", "describe", "--tags", "--abbrev=0"]).decode("utf-8").strip()
+        except subprocess.CalledProcessError:
+            current_tag = "N/A"
+            
+        return commit_hash, branch_name, current_tag
+    except Exception as e:
+        print(f"Failed to get git data: {e}")
+        return None, None, None
 
 class TT2YT:
     def __init__(self, secrets: dict, client_secrets_file: str):
@@ -32,6 +50,13 @@ class TT2YT:
         self.tiktok = TikTok(secrets['tiktok_profile'])
         self.tracker = UploadTracker()
         self.openrouter = OpenRouter(secrets['openrouter_key'])
+
+        commit_hash, branch_name, current_tag = get_git_data()
+        print(f"tt2yt: YouTube Uploader for TikTok videos (version: {current_tag}, commit: {commit_hash}, branch: {branch_name})")
+
+        if branch_name == "experimental":
+            print("Alert: You are running the experimental branch. This may be unstable and is not really recommended to use!")
+        
 
     def run(self):
         while True:
@@ -53,6 +78,10 @@ class TT2YT:
                             print(f"Failed to download {video_id}")
                             continue
 
+                        if Path(downloaded_file).suffix.lower() in AUDIO_EXTENSIONS:
+                            print(f"Skipping {video_id} as its a slideshow/photo!")
+                            continue
+
                         title = video.get("title") or f"TikTok Video {video_id}"
 
                         if "(tiktok-only)" in title:
@@ -60,7 +89,13 @@ class TT2YT:
                             continue
 
                         try:
-                            desc = self.openrouter.generate_description(video["title"])
+                            desc = None
+                            if self.openrouter.api_key:
+                                desc = self.openrouter.generate_description(video.get("title") or "")
+                            
+                            if not desc:
+                                desc = video.get("title") or ""
+
                             yt_video_id = self.youtube.upload_video(downloaded_file, title, desc)
 
                             if yt_video_id:
