@@ -60,7 +60,13 @@ class TT2YT:
                             continue
 
                         try:
-                            desc = self.openrouter.generate_description(video["title"])
+                            desc = None
+                            if self.openrouter.api_key:
+                                desc = self.openrouter.generate_description(video.get("title") or "")
+                            
+                            if not desc:
+                                desc = video.get("title") or ""
+
                             yt_video_id = self.youtube.upload_video(downloaded_file, title, desc)
 
                             if yt_video_id:
