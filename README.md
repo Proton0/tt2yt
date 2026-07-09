@@ -22,9 +22,8 @@ tt2yt is a Python script that allows you to upload TikTok videos directly to You
    ```bash
    git clone https://github.com/proton0/tt2yt`
 
-2. Install the required dependencies:
-   ```bash
-   pip install -r requirements.txt
+2. Install the required dependencies and create the virtual environment:
+   `./setup.sh`
 
 3. Set up Google API credentials:
     - Go to the [Google Cloud Console](https://console.cloud.google.com/).
@@ -34,16 +33,18 @@ tt2yt is a Python script that allows you to upload TikTok videos directly to You
     - Place the `client_secrets.json` file in `secrets` directory
     - Run the script with your credentials to authenticate and generate the required secrets.
    
-   `python3 src/main.py -t <YOUR TIKTOK USERNAME> -c <OPENROUTER API KEY> -c secrets/client_secrets.json`
+   `./setup.sh -t <TIKTOK USERNAME> -o <OPENROUTER API KEY> -c secrets/client_secrets.json`
+
+4. Run tt2yt with `./launch.sh`
 
 > [!NOTE]
 > Do note, the token does expire so you will need to re-run tt2yt
 >
-> You do not need to run tt2yt like the above, just run it normally with `python3 src/main.py`
+> You do not need to run tt2yt like the above, just run it normally with `./launch.sh`
 > and it should open up a browser window for you to login
 
 ## Credits:
-``
+
     - Developed by [proton0](https://github.com/proton0)
 
 ## License
