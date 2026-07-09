@@ -55,6 +55,10 @@ class TT2YT:
 
                         title = video.get("title") or f"TikTok Video {video_id}"
 
+                        if "(tiktok-only)" in title:
+                            print(f"Skipping video {video_id} as tiktok only marker was detected")
+                            continue
+
                         try:
                             desc = self.openrouter.generate_description(video["title"])
                             yt_video_id = self.youtube.upload_video(downloaded_file, title, desc)
