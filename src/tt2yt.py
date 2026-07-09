@@ -18,6 +18,7 @@ See the GNU General Public License for more details.
 import os
 import sys
 import time
+from zipfile import Path
 
 from openrouter import OpenRouter
 from tiktok import TikTok
@@ -25,8 +26,7 @@ from tracker import UploadTracker
 from youtube import YouTube
 import subprocess
 
-
-import subprocess
+AUDIO_EXTENSIONS = ('.mp3', '.m4a', '.wav')
 
 def get_git_data():
     try:
@@ -78,7 +78,7 @@ class TT2YT:
                             print(f"Failed to download {video_id}")
                             continue
 
-                        if downloaded_file.endswith(('.mp3', '.m4a', '.wav')):
+                        if Path(downloaded_file).suffix.lower() in AUDIO_EXTENSIONS:
                             print(f"Skipping {video_id} as its a slideshow/photo!")
                             continue
 
