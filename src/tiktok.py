@@ -42,7 +42,7 @@ class TikTok:
         print("Getting tiktok videos...")
         ydl_opts = {
             'extract_flat': True,
-            'playlistend': 10,
+            'playlistend': 25,
             'skip_download': True,
             'quiet': True,
             'no_warnings': False,
