@@ -39,14 +39,14 @@ tt2yt is a Python script that allows you to upload TikTok videos directly to You
     - Create OAuth 2.0 credentials and download the `client_secrets.json` file.
     - Add the Google email address of the YouTube channel you want to upload to in **Test Users** (mandatory for Google apps in testing).
     - Place the `client_secrets.json` file in the `secrets` directory.
-    - Run the setup script with your credentials to authenticate and generate the required secrets:
+    - Run the start script with your credentials to authenticate and generate the required secrets:
    
    ```bash
    # With OpenRouter AI descriptions:
-   ./setup.sh -t <TIKTOK USERNAME> -o <OPENROUTER API KEY> -c secrets/client_secrets.json
+   ./start.sh -t <TIKTOK USERNAME> -o <OPENROUTER API KEY> -c secrets/client_secrets.json
 
    # Without OpenRouter (falls back to original TikTok caption):
-   ./setup.sh -t <TIKTOK USERNAME> -c secrets/client_secrets.json
+   ./start.sh -t <TIKTOK USERNAME> -c secrets/client_secrets.json
    ```
 
 > [!NOTE]
@@ -56,7 +56,7 @@ tt2yt is a Python script that allows you to upload TikTok videos directly to You
 
 4. Run tt2yt:
    ```bash
-   ./launch.sh
+   ./start.sh
    ```
 
 > [!NOTE]
