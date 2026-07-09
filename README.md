@@ -33,8 +33,14 @@ tt2yt is a Python script that allows you to upload TikTok videos directly to You
     - Put your google account with the YouTube channel you want to upload to in Test Users
     - Place the `client_secrets.json` file in `secrets` directory
     - Run the script with your credentials to authenticate and generate the required secrets.
-   ```bash
-   python3 src/main.py -t <YOUR TIKTOK USERNAME> -c <OPENROUTER API KEY> -c secrets/client_secrets.json
+   
+   `python3 src/main.py -t <YOUR TIKTOK USERNAME> -c <OPENROUTER API KEY> -c secrets/client_secrets.json`
+
+> [!NOTE]
+> Do note, the token does expire so you will need to re-run tt2yt
+>
+> You do not need to run tt2yt like the above, just run it normally with `python3 src/main.py`
+> and it should open up a browser window for you to login
 
 ## Credits:
 ``
