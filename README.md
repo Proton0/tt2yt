@@ -5,47 +5,68 @@ tt2yt is a Python script that allows you to upload TikTok videos directly to You
 ## Features:
 
  - Upload TikTok videos to YouTube Shorts
- - Automatically set video title and description based on metadata and OpenRouter
+ - Automatically set video title and description based on metadata and OpenRouter (optional)
  - Handles video processing and formatting for YouTube Shorts
- - Keeps tracks of uploaded videos to avoid duplicates through SQLite
+ - Keeps track of uploaded videos to avoid duplicates through SQLite
 
 ## Requirements:
 
  - Python 3.x
  - Google API Client Library for Python
- - OpenRouter API for the description (Supports **FREE** models)
+ - OpenRouter API key (Optional, for AI-generated descriptions)
  - Google Client Secrets JSON file for YouTube API authentication
 
 ## Installation:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/proton0/tt2yt`
+   git clone https://github.com/proton0/tt2yt.git
+   ```
+
+> [!NOTE]
+>
+> If you want the latest features, you can run `git checkout experimental` to get experimental features.
+>
 
 2. Install the required dependencies and create the virtual environment:
-   `./setup.sh`
+   ```bash
+   ./setup.sh
+   ```
 
 3. Set up Google API credentials:
     - Go to the [Google Cloud Console](https://console.cloud.google.com/).
     - Create a new project and enable the YouTube Data API v3.
-    - Create OAuth 2.0 credentials and download the `client_secrets.json` file
-    - Put your google account with the YouTube channel you want to upload to in Test Users
-    - Place the `client_secrets.json` file in `secrets` directory
-    - Run the script with your credentials to authenticate and generate the required secrets.
+    - Create OAuth 2.0 credentials and download the `client_secrets.json` file.
+    - Add the Google email address of the YouTube channel you want to upload to in **Test Users** (mandatory for Google apps in testing).
+    - Place the `client_secrets.json` file in the `secrets` directory.
+    - Run the setup script with your credentials to authenticate and generate the required secrets:
    
-   `./setup.sh -t <TIKTOK USERNAME> -o <OPENROUTER API KEY> -c secrets/client_secrets.json`
+   ```bash
+   # With OpenRouter AI descriptions:
+   ./setup.sh -t <TIKTOK USERNAME> -o <OPENROUTER API KEY> -c secrets/client_secrets.json
 
-4. Run tt2yt with `./launch.sh`
+   # Without OpenRouter (falls back to original TikTok caption):
+   ./setup.sh -t <TIKTOK USERNAME> -c secrets/client_secrets.json
+   ```
 
 > [!NOTE]
-> Do note, the token does expire so you will need to re-run tt2yt
 >
-> You do not need to run tt2yt like the above, just run it normally with `./launch.sh`
-> and it should open up a browser window for you to login
+> It is highly recommended to get an OpenRouter API Key, it is free and you can get it by just signing up for OpenRouter
+>
+
+4. Run tt2yt:
+   ```bash
+   ./launch.sh
+   ```
+
+> [!NOTE]
+> The script automatically handles OAuth access token refreshes while running, but if it has been stopped for a long time or credentials are revoked, you may need to re-run it interactively to sign in again.
+>
+> YouTube has a upload quota for the API (~6 per day) so uploads may fail!
 
 ## Credits:
 
-    - Developed by [proton0](https://github.com/proton0)
+- Developed by [proton0](https://github.com/proton0)
 
 ## License
 
