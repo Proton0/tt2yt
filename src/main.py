@@ -53,16 +53,21 @@ def parse_secrets(args: argparse.Namespace) -> dict:
     secrets = {}
     missing_keys = []
 
-    for key in ['tiktok_profile', 'openrouter_key']:
-        val = getattr(args, key) or global_secrets.get(key)
-        if val:
-            secrets[key] = val
-        else:
-            missing_keys.append(key)
+    tiktok_profile = args.tiktok_profile or global_secrets.get('tiktok_profile')
+    if tiktok_profile:
+        secrets['tiktok_profile'] = tiktok_profile
+    else:
+        missing_keys.append('tiktok_profile')
+
+    openrouter_key = args.openrouter_key or global_secrets.get('openrouter_key')
+    if openrouter_key:
+        secrets['openrouter_key'] = openrouter_key
+    else:
+        secrets['openrouter_key'] = None
 
     client_secrets_path = args.client_secrets_file
 
-    if client_secrets_path:
+    if client_secrets_path and Path(client_secrets_path).is_file():
         try:
             with open(client_secrets_path, 'r') as f:
                 secrets['client_secrets'] = json.load(f)
@@ -77,8 +82,16 @@ def parse_secrets(args: argparse.Namespace) -> dict:
     if missing_keys:
         raise RuntimeError(f"Missing required configuration for: {', '.join(missing_keys)}")
 
-    if not global_secrets:
-        save_global_secrets(secrets)
+    has_changes = (
+        not global_secrets or
+        global_secrets.get('tiktok_profile') != secrets['tiktok_profile'] or
+        global_secrets.get('openrouter_key') != secrets['openrouter_key'] or
+        'client_secrets' in secrets and global_secrets.get('client_secrets') != secrets['client_secrets']
+    )
+
+    if has_changes:
+        secrets_to_save = {k: v for k, v in secrets.items() if v is not None}
+        save_global_secrets(secrets_to_save)
 
     return secrets
 
