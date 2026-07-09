@@ -23,7 +23,25 @@ from openrouter import OpenRouter
 from tiktok import TikTok
 from tracker import UploadTracker
 from youtube import YouTube
+import subprocess
 
+
+import subprocess
+
+def get_git_data():
+    try:
+        commit_hash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
+        branch_name = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).decode("utf-8").strip()
+        
+        try:
+            current_tag = subprocess.check_output(["git", "describe", "--tags", "--abbrev=0"]).decode("utf-8").strip()
+        except subprocess.CalledProcessError:
+            current_tag = "N/A"
+            
+        return commit_hash, branch_name, current_tag
+    except Exception as e:
+        print(f"Failed to get git data: {e}")
+        return None, None, None
 
 class TT2YT:
     def __init__(self, secrets: dict, client_secrets_file: str):
@@ -32,6 +50,13 @@ class TT2YT:
         self.tiktok = TikTok(secrets['tiktok_profile'])
         self.tracker = UploadTracker()
         self.openrouter = OpenRouter(secrets['openrouter_key'])
+
+        commit_hash, branch_name, current_tag = get_git_data()
+        print(f"tt2yt: YouTube Uploader for TikTok videos (version: {current_tag}, commit: {commit_hash}, branch: {branch_name})")
+
+        if branch_name == "experimental":
+            print("Alert: You are running the experimental branch. This may be unstable and is not really recommended to use!")
+        
 
     def run(self):
         while True:
