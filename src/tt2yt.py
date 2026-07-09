@@ -78,6 +78,10 @@ class TT2YT:
                             print(f"Failed to download {video_id}")
                             continue
 
+                        if downloaded_file.endswith(('.mp3', '.m4a', '.wav')):
+                            print(f"Skipping {video_id} as its a slideshow/photo!")
+                            continue
+
                         title = video.get("title") or f"TikTok Video {video_id}"
 
                         if "(tiktok-only)" in title:
