@@ -18,7 +18,7 @@ See the GNU General Public License for more details.
 import os
 import sys
 import time
-from zipfile import Path
+from pathlib import Path
 
 from openrouter import OpenRouter
 from tiktok import TikTok
