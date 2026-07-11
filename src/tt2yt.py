@@ -32,12 +32,12 @@ def get_git_data():
     try:
         commit_hash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
         branch_name = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).decode("utf-8").strip()
-        
+
         try:
             current_tag = subprocess.check_output(["git", "describe", "--tags", "--abbrev=0"]).decode("utf-8").strip()
         except subprocess.CalledProcessError:
             current_tag = "N/A"
-            
+
         return commit_hash, branch_name, current_tag
     except Exception as e:
         print(f"Failed to get git data: {e}")
@@ -56,7 +56,7 @@ class TT2YT:
 
         if branch_name == "experimental":
             print("Alert: You are running the experimental branch. This may be unstable and is not really recommended to use!")
-        
+
 
     def run(self):
         while True:
@@ -92,7 +92,7 @@ class TT2YT:
                             desc = None
                             if self.openrouter.api_key:
                                 desc = self.openrouter.generate_description(video.get("title") or "")
-                            
+
                             if not desc:
                                 desc = video.get("title") or ""
 
