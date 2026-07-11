@@ -1,5 +1,10 @@
 # tt2yt: TikTok to YouTube Shorts Uploader
 
+[![OpenRouter](https://img.shields.io/badge/OpenRouter-94A3B8?logo=openrouter&logoColor=fff)](#)
+[![TikTok](https://img.shields.io/badge/TikTok-black?logo=tiktok&logoColor=white)](#)
+[![YouTube](https://img.shields.io/badge/YouTube-%23FF0000.svg?logo=YouTube&logoColor=white)](#)
+[![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=fff)](#)
+
 tt2yt is a Python script that allows you to upload TikTok videos directly to YouTube Shorts. It uses the YouTube Data API to handle video uploads and metadata management.
 
 ## Features:
