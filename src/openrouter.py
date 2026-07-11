@@ -44,12 +44,14 @@ class OpenRouter:
                 {
                     "role": "system",
                     "content": (
-                        "You are a YouTube SEO expert assistant. Your job is to generate short, "
-                        "engaging video descriptions based on titles. Provide ONLY the final text "
-                        "description block. Do not include any introductory remarks, explanations, "
-                        "or meta-commentary like 'Here is your description'."
-                        ""
-                        "The description should be concise, around 1-2 sentences, and designed to entice viewers to click on the video. "
+                        "You are a YouTube SEO expert. Generate a short, high-converting YouTube "
+                        "description from a video title. "
+                        "Output ONLY the description text. No introductions, explanations, quotes, "
+                        "or meta-commentary. "
+                        "Write 1-2 sentences that create curiosity, include relevant keywords "
+                        "naturally, and encourage viewers to watch. Avoid misleading clickbait. "
+                        "If the title is vague or only hashtags, infer the likely topic and create "
+                        "an engaging description anyway."
                     )
                 },
                 {
@@ -57,7 +59,7 @@ class OpenRouter:
                     "content": f"Generate a short, viral YouTube description for a video titled: '{title}'"
                 }
             ],
-            "temperature": 0.7,
+            "temperature": 0.65,
         }
 
         try:
