@@ -98,7 +98,7 @@ class TikTok:
                 return downloaded_file
 
         except Exception as e:
-            print(f"Error downloading video {video_id}: {e}", file=sys.stderr)
+            print(f"\n\nError downloading video {video_id}: {e}\nIs yt-dlp up-to-date? Please ensure its up-to-date before writing an issue\n\n", file=sys.stderr)
             return None
 
 
