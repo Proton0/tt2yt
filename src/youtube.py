@@ -78,15 +78,20 @@ class YouTube:
         print("Authenticated successfully!")
         return credentials
 
-    def upload_video(self, file_path: str, title: str, description: str = "") -> str | None:
-        print("Preparing to upload video")
-
+    def _process_title(self, title: str) -> str:
         tag = " #shorts"
         if tag.strip().lower() not in title.lower():
             max_title_len = 100 - len(tag)
             title = f"{title[:max_title_len]}{tag}"
         else:
             title = title[:100]
+
+        return title
+
+    def upload_video(self, file_path: str, title: str, description: str = "") -> str | None:
+        print("Preparing to upload video")
+
+        title = _process_title(title)
 
         body = {
             "snippet": {
