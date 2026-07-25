@@ -33,12 +33,9 @@ tt2yt is a Python script that allows you to upload TikTok videos directly to You
 > If you want the latest features, you can run `git checkout experimental` to get experimental features.
 >
 
-2. Install the required dependencies and create the virtual environment:
-   ```bash
-   ./setup.sh
-   ```
 
-3. Set up Google API credentials:
+
+2. Set up Google API credentials:
     - Go to the [Google Cloud Console](https://console.cloud.google.com/).
     - Create a new project and enable the YouTube Data API v3.
     - Create OAuth 2.0 credentials and download the `client_secrets.json` file.
