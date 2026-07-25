@@ -52,6 +52,9 @@ else
     fi
 fi
 
+echo "Updating yt-dlp"
+pip install -U yt-dlp
+
 echo "Environment setup complete, Running tt2yt"
 
 # Build command
