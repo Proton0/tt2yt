@@ -1,5 +1,5 @@
 requests~=2.34.2
-yt-dlp~=2026.3.17
-protobuf~=7.34.1
+yt-dlp
+curl-cffi~=0.15.0
 google-auth-oauthlib~=1.4.0
-google-api-python-client~=2.196.0
+google-api-python-client~=2.198.0

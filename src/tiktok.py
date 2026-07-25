@@ -17,18 +17,34 @@ See the GNU General Public License for more details.
 
 import sys
 from pathlib import Path
-
+import re
 from yt_dlp import YoutubeDL
 
 DOWNLOAD_DIR = Path("downloads")
 
 
 class TikTok:
-    def __init__(self, tiktok_profile: str):
-        if not tiktok_profile.startswith("http"):
-            self.tiktok_profile = f"{tiktok_profile.lstrip('@')}"
-        else:
-            self.tiktok_profile = tiktok_profile
+    def __init__(self, tiktok_profile: str | None = None, tiktok_channel_id: str | None = None):
+        self.tiktok_profile = None
+        self.tiktok_channel_id = tiktok_channel_id
+
+        if tiktok_profile is None and tiktok_channel_id is None:
+            raise ValueError("Both tiktok_profile and tiktok_channel_id are None.")
+
+        if tiktok_profile == "" and tiktok_channel_id == "":
+            raise ValueError("Both tiktok_profile and tiktok_channel_id are empty")
+
+        if tiktok_profile:
+            profile = tiktok_profile.strip()
+            if "tiktok.com" in profile or "@" in profile:
+                match = re.search(r'@([a-zA-Z0-9_\.]+)', profile)
+                if match:
+                    profile = match.group(1)
+                else:
+                    profile = profile.rstrip("/").split("/")[-1].lstrip("@")
+            else:
+                profile = profile.lstrip("@")
+            self.tiktok_profile = profile
 
         self.headers = {
             'User-Agent': (
@@ -51,7 +67,12 @@ class TikTok:
 
         try:
             with YoutubeDL(ydl_opts) as ydl:
-                profile_data = ydl.extract_info(f"https://tiktok.com/@{self.tiktok_profile}", download=False)
+                if self.tiktok_profile:
+                    profile_data = ydl.extract_info(f"https://tiktok.com/@{self.tiktok_profile}", download=False)
+                else:
+                    # use the channel id instead of username as yt-dlp recommends using channel id
+                    profile_data = ydl.extract_info(f"tiktokuser:{self.tiktok_channel_id}", download=False)
+
 
                 if not profile_data or 'entries' not in profile_data:
                     print("No videos found or failed to parse profile metadata.", file=sys.stderr)
@@ -102,10 +123,19 @@ class TikTok:
             return None
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
+    print("Using profile")
     scraper = TikTok("vproton0")
     latest_videos = scraper.get_videos()
 
     print(f"\nRetrieved {len(latest_videos)} items:")
     for idx, vid in enumerate(latest_videos, 1):
+        print(f"{idx}. [{vid['id']}] -> {vid['title'][:40]}...")
+
+    print("Using channel ID")
+    scraper_id = TikTok(None, "MS4wLjABAAAA_3nK1eKl6nn2JV3s2PJ95tUKmnORf_SXoGMBWyYRK8atwrEfuwbPOxGfSPD9fMGf")
+    latest_vids = scraper_id.get_videos()
+
+    print(f"\nRetrieved {len(latest_vids)} items:")
+    for idx, vid in enumerate(latest_vids, 1):
         print(f"{idx}. [{vid['id']}] -> {vid['title'][:40]}...")
