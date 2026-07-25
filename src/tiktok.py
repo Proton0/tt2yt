@@ -24,11 +24,22 @@ DOWNLOAD_DIR = Path("downloads")
 
 
 class TikTok:
-    def __init__(self, tiktok_profile: str):
-        if not tiktok_profile.startswith("http"):
-            self.tiktok_profile = f"{tiktok_profile.lstrip('@')}"
-        else:
-            self.tiktok_profile = tiktok_profile
+    def __init__(self, tiktok_profile: str | None = None, tiktok_channel_id: str | None = None):
+        self.tiktok_profile = None
+        self.tiktok_channel_id = tiktok_channel_id
+
+        if tiktok_profile is None and tiktok_channel_id is None:
+            raise ValueError("Both tiktok_profile and tiktok_channel_id are None.")
+
+        if tiktok_profile == "" and tiktok_channel_id is "":
+            raise ValueError("Both tiktok_profile and tiktok_channel_id are empty")
+
+        # Process tiktok_profile if we have it
+        if tiktok_profile:
+            if not tiktok_profile.startswith("http"):
+                self.tiktok_profile = f"{tiktok_profile.lstrip('@')}"
+            else:
+                self.tiktok_profile = tiktok_profile
 
         self.headers = {
             'User-Agent': (
@@ -51,7 +62,12 @@ class TikTok:
 
         try:
             with YoutubeDL(ydl_opts) as ydl:
-                profile_data = ydl.extract_info(f"https://tiktok.com/@{self.tiktok_profile}", download=False)
+                if self.tiktok_profile:
+                    profile_data = ydl.extract_info(f"https://tiktok.com/@{self.tiktok_profile}", download=False)
+                else:
+                    # use the channel id instead of username as yt-dlp recommends using channel id
+                    profile_data = ydl.extract_info(f"tiktokuser:{self.tiktok_channel_id}", download=False)
+
 
                 if not profile_data or 'entries' not in profile_data:
                     print("No videos found or failed to parse profile metadata.", file=sys.stderr)
@@ -103,9 +119,18 @@ class TikTok:
 
 
 if __name__ == "__main__":
+    print("Using profile")
     scraper = TikTok("vproton0")
     latest_videos = scraper.get_videos()
 
     print(f"\nRetrieved {len(latest_videos)} items:")
     for idx, vid in enumerate(latest_videos, 1):
+        print(f"{idx}. [{vid['id']}] -> {vid['title'][:40]}...")
+
+    print("Using channel ID")
+    scraper_id = TikTok(None, "MS4wLjABAAAA_3nK1eKl6nn2JV3s2PJ95tUKmnORf_SXoGMBWyYRK8atwrEfuwbPOxGfSPD9fMGf")
+    latest_vids = scraper_id.get_videos()
+
+    print(f"\nRetrieved {len(latest_vids)} items:")
+    for idx, vid in enumerate(latest_vids, 1):
         print(f"{idx}. [{vid['id']}] -> {vid['title'][:40]}...")

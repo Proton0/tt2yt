@@ -48,16 +48,22 @@ tt2yt is a Python script that allows you to upload TikTok videos directly to You
    
    ```bash
    # With OpenRouter AI descriptions:
-   ./start.sh -t <TIKTOK USERNAME> -o <OPENROUTER API KEY> -c secrets/client_secrets.json
+   ./start.sh -tc <TIKTOK CHANNEL ID> -o <OPENROUTER API KEY> -c secrets/client_secrets.json
 
    # Without OpenRouter (falls back to original TikTok caption):
-   ./start.sh -t <TIKTOK USERNAME> -c secrets/client_secrets.json
+   ./start.sh -tc <TIKTOK CHANNEL ID> -c secrets/client_secrets.json
    ```
 
 > [!NOTE]
 >
 > It is highly recommended to get an OpenRouter API Key, it is free and you can get it by just signing up for OpenRouter
 >
+> You can get your channel ID by running `yt-dlp --print channel_id <A video you posted>`
+> 
+> Example: `yt-dlp --print channel_id https://www.tiktok.com/@vproton0/video/7666384110281215252`
+> 
+> If you dont want to do this, you can supply `-t <TIKTOK PROFILE>` instead of `-tc` but
+> it is a LOT better to use channel ID as TikTok may block yt-dlp from scraping your profile
 
 4. Run tt2yt:
    ```bash

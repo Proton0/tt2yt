@@ -56,8 +56,19 @@ def parse_secrets(args: argparse.Namespace) -> dict:
     tiktok_profile = args.tiktok_profile or global_secrets.get('tiktok_profile')
     if tiktok_profile:
         secrets['tiktok_profile'] = tiktok_profile
+
+    tiktok_channel_id = args.tiktok_channel_id or global_secrets.get('tiktok_channel_id')
+    if tiktok_channel_id:
+        secrets['tiktok_channel_id'] = tiktok_channel_id
+        print("Using TikTok channel ID")
     else:
-        missing_keys.append('tiktok_profile')
+        if not tiktok_profile:
+            # Both of them are missing
+            missing_keys.append("tiktok_channel_id")
+            missing_keys.append("tiktok_profile")
+            print("Note: More recommended to use channel ID instead of profile, but profile is also accepted.")
+        else:
+            print("Warning: Using tiktok profile instead of channel ID is more prone to errors.")
 
     openrouter_key = args.openrouter_key or global_secrets.get('openrouter_key')
     if openrouter_key:
@@ -79,14 +90,18 @@ def parse_secrets(args: argparse.Namespace) -> dict:
     else:
         missing_keys.append("client_secrets_file")
 
+    if not secrets.get("tiktok_channel_id") and secrets.get("tiktok_profile"):
+        print("Warning: Channel ID is a lot better than using TikTok Profile.")
+
     if missing_keys:
         raise RuntimeError(f"Missing required configuration for: {', '.join(missing_keys)}")
 
     has_changes = (
         not global_secrets or
-        global_secrets.get('tiktok_profile') != secrets['tiktok_profile'] or
-        global_secrets.get('openrouter_key') != secrets['openrouter_key'] or
-        'client_secrets' in secrets and global_secrets.get('client_secrets') != secrets['client_secrets']
+        global_secrets.get('tiktok_profile') != secrets.get('tiktok_profile') or
+        global_secrets.get('openrouter_key') != secrets.get('openrouter_key') or
+        'client_secrets' in secrets and global_secrets.get('client_secrets') != secrets.get('client_secrets') or
+        global_secrets.get("tiktok_channel_id") != secrets.get("tiktok_channel_id")
     )
 
     if has_changes:
@@ -100,6 +115,7 @@ def main():
     parser = argparse.ArgumentParser(description='tt2yt: TikTok to YouTube Uploader')
 
     parser.add_argument('-t', '--tiktok_profile', type=str, help='TikTok profile')
+    parser.add_argument("-tc", "--tiktok-channel-id", type=str, help="TikTok Channel ID")
     parser.add_argument('-o', '--openrouter_key', type=str, help='OpenRouter API key')
     parser.add_argument('-c', '--client_secrets_file', type=str, help='Google client secrets file path',
                         default="secrets/client_secrets.json")

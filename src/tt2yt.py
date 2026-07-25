@@ -47,7 +47,7 @@ class TT2YT:
     def __init__(self, secrets: dict, client_secrets_file: str):
         self.secrets = secrets
         self.youtube = YouTube(client_secrets_file)
-        self.tiktok = TikTok(secrets['tiktok_profile'])
+        self.tiktok = TikTok(secrets.get("tiktok_profile"), secrets.get("tiktok_channel_id"))
         self.tracker = UploadTracker()
         self.openrouter = OpenRouter(secrets['openrouter_key'])
 
