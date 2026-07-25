@@ -17,7 +17,7 @@ See the GNU General Public License for more details.
 
 import sys
 from pathlib import Path
-from urllib.parse import urlparse
+import re
 from yt_dlp import YoutubeDL
 
 DOWNLOAD_DIR = Path("downloads")
@@ -34,22 +34,16 @@ class TikTok:
         if tiktok_profile == "" and tiktok_channel_id == "":
             raise ValueError("Both tiktok_profile and tiktok_channel_id are empty")
 
-        # Process tiktok_profile if we have it
         if tiktok_profile:
             profile = tiktok_profile.strip()
-
-            if "tiktok.com" in profile:
-                if not profile.startswith(("http://", "https://")):
-                    profile = "https://" + profile
-
-                path = urlparse(profile).path.strip("/")
-                if path.startswith("@"):
-                    self.tiktok_profile = path[1:]  # Remove the @
+            if "tiktok.com" in profile or "@" in profile:
+                match = re.search(r'@([a-zA-Z0-9_\.]+)', profile)
+                if match:
+                    profile = match.group(1)
                 else:
-                    profile = path.split("/")[0]
+                    profile = profile.rstrip("/").split("/")[-1].lstrip("@")
             else:
                 profile = profile.lstrip("@")
-
             self.tiktok_profile = profile
 
         self.headers = {
