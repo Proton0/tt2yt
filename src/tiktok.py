@@ -123,7 +123,7 @@ class TikTok:
             return None
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
     print("Using profile")
     scraper = TikTok("vproton0")
     latest_videos = scraper.get_videos()

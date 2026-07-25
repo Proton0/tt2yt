@@ -88,7 +88,7 @@ class YouTube:
 
         return title
 
-    def upload_video(self, file_path: str, title: str, description: str = "") -> str | None:
+    def upload_video(self, file_path: str, title: str, description: str = "") -> str | None: # pragma: no cover
         print("Preparing to upload video")
 
         title = _process_title(title)
@@ -130,7 +130,7 @@ class YouTube:
             return None
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
     try:
         uploader = YouTube("secrets/client_secrets.json")
         print("YouTube authenticated successfully")

@@ -83,7 +83,7 @@ class OpenRouter:
             return None
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
     import json
     f = open("secrets/secrets.json", "r")
     API_KEY = json.load(f)["openrouter_key"]

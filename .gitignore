@@ -9,3 +9,4 @@ secrets/client_secrets.json
 secrets/*
 .DS_Store
 downloads
+.coverage
