@@ -22,13 +22,13 @@ from requests.exceptions import RequestException
 
 from openrouter import OpenRouter
 
-def test_missing_api_key(capsys):
+def test_missing_api_key(caplog):
     client = OpenRouter(api_key="")
-    result = client.generate_description("Test Title")
+    with caplog.at_level("WARNING"):
+        result = client.generate_description("Test Title")
 
     assert result is None
-    captured = capsys.readouterr()
-    assert "OpenRouter API key is missing" in captured.err
+    assert "OpenRouter API key is missing" in caplog.text
 
 
 @patch("requests.post")

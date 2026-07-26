@@ -15,10 +15,13 @@ See the GNU General Public License for more details.
 
 """
 
-import sys
 from pathlib import Path
 import re
 from yt_dlp import YoutubeDL
+
+from logger import get_logger
+
+logger = get_logger()
 
 DOWNLOAD_DIR = Path("downloads")
 
@@ -55,7 +58,7 @@ class TikTok:
         }
 
     def get_videos(self) -> list[dict]:
-        print("Getting tiktok videos...")
+        logger.info("Getting tiktok videos...")
         ydl_opts = {
             'extract_flat': True,
             'playlistend': 25,
@@ -75,7 +78,7 @@ class TikTok:
 
 
                 if not profile_data or 'entries' not in profile_data:
-                    print("No videos found or failed to parse profile metadata.", file=sys.stderr)
+                    logger.warning("No videos found or failed to parse profile metadata.")
                     return []
 
                 videos = []
@@ -93,7 +96,7 @@ class TikTok:
                 return videos
 
         except Exception as e:
-            print(f"Error extracting TikTok profile data: {e}", file=sys.stderr)
+            logger.error(f"Error extracting TikTok profile data: {e}")
             return []
 
     def download_video(self, video_id: str) -> str | None:
@@ -109,7 +112,7 @@ class TikTok:
             'http_headers': self.headers
         }
 
-        print(f"\nDownloading video {video_id}...")
+        logger.info(f"Downloading video {video_id}...")
 
         try:
             with YoutubeDL(ydl_opts) as ydl:
@@ -119,23 +122,26 @@ class TikTok:
                 return downloaded_file
 
         except Exception as e:
-            print(f"\n\nError downloading video {video_id}: {e}\nIs yt-dlp up-to-date? Please ensure its up-to-date before writing an issue\n\n", file=sys.stderr)
+            logger.error(
+                f"Error downloading video {video_id}: {e}\n"
+                "Is yt-dlp up-to-date? Please ensure its up-to-date before writing an issue"
+            )
             return None
 
 
 if __name__ == "__main__": # pragma: no cover
-    print("Using profile")
+    logger.info("Using profile")
     scraper = TikTok("vproton0")
     latest_videos = scraper.get_videos()
 
-    print(f"\nRetrieved {len(latest_videos)} items:")
+    logger.info(f"Retrieved {len(latest_videos)} items:")
     for idx, vid in enumerate(latest_videos, 1):
-        print(f"{idx}. [{vid['id']}] -> {vid['title'][:40]}...")
+        logger.info(f"{idx}. [{vid['id']}] -> {vid['title'][:40]}...")
 
-    print("Using channel ID")
+    logger.info("Using channel ID")
     scraper_id = TikTok(None, "MS4wLjABAAAA_3nK1eKl6nn2JV3s2PJ95tUKmnORf_SXoGMBWyYRK8atwrEfuwbPOxGfSPD9fMGf")
     latest_vids = scraper_id.get_videos()
 
-    print(f"\nRetrieved {len(latest_vids)} items:")
+    logger.info(f"Retrieved {len(latest_vids)} items:")
     for idx, vid in enumerate(latest_vids, 1):
-        print(f"{idx}. [{vid['id']}] -> {vid['title'][:40]}...")
+        logger.info(f"{idx}. [{vid['id']}] -> {vid['title'][:40]}...")

@@ -16,15 +16,18 @@ See the GNU General Public License for more details.
 """
 
 import os
-import sys
 import time
 from pathlib import Path
+import subprocess
 
+from logger import get_logger
 from openrouter import OpenRouter
 from tiktok import TikTok
 from tracker import UploadTracker
 from youtube import YouTube
-import subprocess
+
+logger = get_logger()
+
 
 AUDIO_EXTENSIONS = ('.mp3', '.m4a', '.wav')
 
@@ -40,7 +43,7 @@ def get_git_data():
 
         return commit_hash, branch_name, current_tag
     except Exception as e:
-        print(f"Failed to get git data: {e}")
+        logger.error(f"Failed to get git data: {e}")
         return None, None, None
 
 class TT2YT:
@@ -52,10 +55,10 @@ class TT2YT:
         self.openrouter = OpenRouter(secrets['openrouter_key'])
 
         commit_hash, branch_name, current_tag = get_git_data()
-        print(f"tt2yt: YouTube Uploader for TikTok videos (version: {current_tag}, commit: {commit_hash}, branch: {branch_name})")
+        logger.info(f"tt2yt: YouTube Uploader for TikTok videos (version: {current_tag}, commit: {commit_hash}, branch: {branch_name})")
 
         if branch_name == "experimental":
-            print("Alert: You are running the experimental branch. This may be unstable and is not really recommended to use!")
+            logger.warning("Alert: You are running the experimental branch. This may be unstable and is not really recommended to use!")
 
 
     def run(self):
@@ -63,7 +66,7 @@ class TT2YT:
             try:
                 videos = self.tiktok.get_videos()
                 if not videos:
-                    print("No videos found")
+                    logger.info("No videos found")
                 else:
                     for video in reversed(videos):
                         video_id = video["id"]
@@ -71,21 +74,21 @@ class TT2YT:
                         if self.tracker.is_uploaded(video_id):
                             continue
 
-                        print(f"Processing video: {video_id}")
+                        logger.info(f"Processing video: {video_id}")
                         downloaded_file = self.tiktok.download_video(video_id)
 
                         if not downloaded_file or not os.path.exists(downloaded_file):
-                            print(f"Failed to download {video_id}")
+                            logger.error(f"Failed to download {video_id}")
                             continue
 
                         if Path(downloaded_file).suffix.lower() in AUDIO_EXTENSIONS:
-                            print(f"Skipping {video_id} as its a slideshow/photo!")
+                            logger.info(f"Skipping {video_id} as its a slideshow/photo!")
                             continue
 
                         title = video.get("title") or f"TikTok Video {video_id}"
 
                         if "(tiktok-only)" in title:
-                            print(f"Skipping video {video_id} as tiktok only marker was detected")
+                            logger.info(f"Skipping video {video_id} as tiktok only marker was detected")
                             continue
 
                         try:
@@ -100,18 +103,18 @@ class TT2YT:
 
                             if yt_video_id:
                                 self.tracker.mark_as_uploaded(video_id, yt_video_id)
-                                print(f"Uploaded tiktok video {video_id} to youtube ({yt_video_id})")
+                                logger.info(f"Uploaded tiktok video {video_id} to youtube ({yt_video_id})")
                             else:
-                                print(f"Failed to upload {downloaded_file}")
+                                logger.error(f"Failed to upload {downloaded_file}")
 
                         finally:
                             try:
                                 if os.path.exists(downloaded_file):
                                     os.remove(downloaded_file)
                             except Exception as e:
-                                print(f"Failed to delete video {downloaded_file}: {e}")
+                                logger.error(f"Failed to delete video {downloaded_file}: {e}")
 
             except Exception as e:
-                print(f"Unhandled exception: {e}", file=sys.stderr)
-            print("Finished, sleeping now")
+                logger.error(f"Unhandled exception: {e}")
+            logger.info("Finished, sleeping now")
             time.sleep(1800)

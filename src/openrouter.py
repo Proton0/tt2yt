@@ -15,9 +15,11 @@ See the GNU General Public License for more details.
 
 """
 
-import sys
-
 import requests
+
+from logger import get_logger
+
+logger = get_logger()
 
 
 class OpenRouter:
@@ -26,9 +28,9 @@ class OpenRouter:
         self.api_url = "https://openrouter.ai/api/v1/chat/completions"
 
     def generate_description(self, title: str) -> str | None:
-        print("Generating description")
+        logger.info("Generating description")
         if not self.api_key:
-            print("OpenRouter API key is missing.", file=sys.stderr)
+            logger.warning("OpenRouter API key is missing.")
             return None
 
         headers = {
@@ -71,15 +73,15 @@ class OpenRouter:
 
             description = data["choices"][0]["message"]["content"].strip()
 
-            print("Generated description")
+            logger.info("Generated description")
 
             return description
 
         except requests.exceptions.RequestException as req_err:
-            print(f"Network error calling OpenRouter API: {req_err}", file=sys.stderr)
+            logger.error(f"Network error calling OpenRouter API: {req_err}")
             return None
         except (KeyError, IndexError, ValueError) as parse_err:
-            print(f"Error parsing OpenRouter response payload: {parse_err}", file=sys.stderr)
+            logger.error(f"Error parsing OpenRouter response payload: {parse_err}")
             return None
 
 
@@ -89,4 +91,4 @@ if __name__ == "__main__": # pragma: no cover
     API_KEY = json.load(f)["openrouter_key"]
     ai = OpenRouter(API_KEY)
     desc = ai.generate_description("")
-    print(f"\nGenerated Description Output:\n{desc}")
+    logger.info(f"\nGenerated Description Output:\n{desc}")

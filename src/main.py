@@ -21,6 +21,11 @@ import os
 import sys
 from pathlib import Path
 
+from logger import get_logger, setup_logger
+
+setup_logger()
+logger = get_logger()
+
 from tt2yt import TT2YT
 
 SECRETS_DIR = Path("secrets")
@@ -42,18 +47,18 @@ def load_global_secrets() -> dict:
         with GLOBAL_SECRETS_FILE.open('r') as f:
             return json.load(f)
     except json.JSONDecodeError:
-        print(f"Warning: Failed to decode {GLOBAL_SECRETS_FILE}. Using empty secrets.", file=sys.stderr)
+        logger.warning(f"Failed to decode {GLOBAL_SECRETS_FILE}. Using empty secrets.")
         return {}
 
 
 def save_global_secrets(secrets: dict):
-    print("Saving secrets...")
+    logger.info("Saving secrets...")
     try:
         SECRETS_DIR.mkdir(parents=True, exist_ok=True)
         with GLOBAL_SECRETS_FILE.open('w') as f:
             json.dump(secrets, f, indent=4)
     except Exception as e:
-        print(f"Error saving secrets to {GLOBAL_SECRETS_FILE}: {e}", file=sys.stderr)
+        logger.error(f"Error saving secrets to {GLOBAL_SECRETS_FILE}: {e}")
 
 
 def load_env_secrets() -> dict:
@@ -82,10 +87,7 @@ def load_env_secrets() -> dict:
         try:
             env['client_secrets'] = json.loads(value)
         except json.JSONDecodeError as exc:
-            print(
-                f"Warning: {ENV_CLIENT_SECRETS} is not valid JSON and will be ignored: {exc}",
-                file=sys.stderr,
-            )
+            logger.warning(f"{ENV_CLIENT_SECRETS} is not valid JSON and will be ignored: {exc}")
     elif file_path := os.environ.get(ENV_CLIENT_SECRETS_FILE):
         path = Path(file_path)
         if path.is_file():
@@ -93,15 +95,9 @@ def load_env_secrets() -> dict:
                 with path.open('r') as f:
                     env['client_secrets'] = json.load(f)
             except Exception as exc:
-                print(
-                    f"Warning: Could not read {ENV_CLIENT_SECRETS_FILE} path '{file_path}': {exc}",
-                    file=sys.stderr,
-                )
+                logger.warning(f"Could not read {ENV_CLIENT_SECRETS_FILE} path '{file_path}': {exc}")
         else:
-            print(
-                f"Warning: {ENV_CLIENT_SECRETS_FILE} path '{file_path}' does not exist.",
-                file=sys.stderr,
-            )
+            logger.warning(f"{ENV_CLIENT_SECRETS_FILE} path '{file_path}' does not exist.")
 
     return env
 
@@ -129,15 +125,15 @@ def parse_secrets(args: argparse.Namespace) -> dict:
     )
     if tiktok_channel_id:
         secrets['tiktok_channel_id'] = tiktok_channel_id
-        print("Using TikTok channel ID")
+        logger.info("Using TikTok channel ID")
     else:
         if not tiktok_profile:
             # Both of them are missing
             missing_keys.append("tiktok_channel_id")
             missing_keys.append("tiktok_profile")
-            print("Note: More recommended to use channel ID instead of profile, but profile is also accepted.")
+            logger.info("More recommended to use channel ID instead of profile, but profile is also accepted.")
         else:
-            print("Warning: Using tiktok profile instead of channel ID is more prone to errors.")
+            logger.warning("Using TikTok profile instead of channel ID is more prone to errors.")
 
     openrouter_key = (
         args.openrouter_key
@@ -157,7 +153,7 @@ def parse_secrets(args: argparse.Namespace) -> dict:
             with open(client_secrets_path, 'r') as f:
                 secrets['client_secrets'] = json.load(f)
         except Exception as e:
-            print(f"Error loading client secrets from {client_secrets_path}: {e}", file=sys.stderr)
+            logger.error(f"Error loading client secrets from {client_secrets_path}: {e}")
             missing_keys.append("client_secrets")
     elif 'client_secrets' in env_secrets:
         secrets['client_secrets'] = env_secrets['client_secrets']
@@ -167,7 +163,7 @@ def parse_secrets(args: argparse.Namespace) -> dict:
         missing_keys.append("client_secrets_file")
 
     if not secrets.get("tiktok_channel_id") and secrets.get("tiktok_profile"):
-        print("Warning: Channel ID is a lot better than using TikTok Profile.")
+        logger.warning("Channel ID is a lot better than using TikTok Profile.")
 
     if missing_keys:
         raise RuntimeError(f"Missing required configuration for: {', '.join(missing_keys)}")
@@ -204,7 +200,7 @@ def main():
         x.run()
 
     except RuntimeError as e:
-        print(f"Fatal Error: {e}", file=sys.stderr)
+        logger.critical(f"Fatal Error: {e}")
         sys.exit(1)
 
 
