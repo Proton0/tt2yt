@@ -188,7 +188,7 @@ def parse_secrets(args: argparse.Namespace) -> dict:
         global_secrets.get('tiktok_profile') != secrets.get('tiktok_profile') or
         global_secrets.get('openrouter_key') != secrets.get('openrouter_key') or
         global_secrets.get('discord_webhook_url') != secrets.get('discord_webhook_url') or
-        'client_secrets' in secrets and global_secrets.get('client_secrets') != secrets.get('client_secrets') or
+        ('client_secrets' in secrets and global_secrets.get('client_secrets') != secrets.get('client_secrets')) or
         global_secrets.get("tiktok_channel_id") != secrets.get("tiktok_channel_id")
     )
 
@@ -208,8 +208,18 @@ def main():
     parser.add_argument('-d', '--discord_webhook_url', type=str, help='Discord Webhook URL')
     parser.add_argument('-c', '--client_secrets_file', type=str, help='Google client secrets file path',
                         default="secrets/client_secrets.json")
-
+    parser.add_argument("--no-autoupdate", action="store_true", default=False, help="Disable automatic update of yt-dlp")
     args = parser.parse_args()
+
+    try:
+        if not args.no_autoupdate:
+            logger.info("Starting auto-updater")
+            import update
+            update.start_updater()
+        else:
+            logger.warning("Auto-update is disabled")
+    except Exception as e:
+        logger.critical(f"Failed to start updater: {e}")
 
     try:
         secrets = parse_secrets(args)
