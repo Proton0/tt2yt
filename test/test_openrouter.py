@@ -70,3 +70,14 @@ def test_malformed_json_response_returns_none(mock_post):
     result = client.generate_description("Test Title")
 
     assert result is None
+
+@patch("requests.post")
+def test_non_200_response(mock_post):
+    mock_response = MagicMock()
+    mock_response.raise_for_status.side_effect = RequestException("403 Forbidden")
+    mock_post.return_value = mock_response
+
+    client = OpenRouter(api_key="fake-sk-or-12345")
+    result = client.generate_description("Test Title")
+
+    assert result is None
