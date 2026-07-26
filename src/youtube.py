@@ -91,7 +91,7 @@ class YouTube:
     def upload_video(self, file_path: str, title: str, description: str = "") -> str | None: # pragma: no cover
         print("Preparing to upload video")
 
-        title = _process_title(title)
+        title = self._process_title(title)
 
         body = {
             "snippet": {
