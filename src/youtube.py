@@ -69,7 +69,7 @@ class YouTube:
                     )
 
                 flow = InstalledAppFlow.from_client_secrets_file(self.client_secrets_file, SCOPES)
-                credentials = flow.run_local_server(port=0)
+                credentials = flow.run_local_server(port=0, open_browser=False)
 
             TOKEN_FILE.parent.mkdir(parents=True, exist_ok=True)
             with open(TOKEN_FILE, "w") as token:
