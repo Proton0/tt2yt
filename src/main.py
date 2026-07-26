@@ -116,7 +116,7 @@ def parse_secrets(args: argparse.Namespace) -> dict:
 
     # Priority: CLI > env > secrets file
     tiktok_profile = (
-        args.tiktok_profile
+        getattr(args, 'tiktok_profile', None)
         or env_secrets.get('tiktok_profile')
         or global_secrets.get('tiktok_profile')
     )
@@ -124,7 +124,7 @@ def parse_secrets(args: argparse.Namespace) -> dict:
         secrets['tiktok_profile'] = tiktok_profile
 
     tiktok_channel_id = (
-        args.tiktok_channel_id
+        getattr(args, 'tiktok_channel_id', None)
         or env_secrets.get('tiktok_channel_id')
         or global_secrets.get('tiktok_channel_id')
     )
@@ -141,7 +141,7 @@ def parse_secrets(args: argparse.Namespace) -> dict:
             logger.warning("Using TikTok profile instead of channel ID is more prone to errors.")
 
     openrouter_key = (
-        args.openrouter_key
+        getattr(args, 'openrouter_key', None)
         or env_secrets.get('openrouter_key')
         or global_secrets.get('openrouter_key')
     )
@@ -161,7 +161,7 @@ def parse_secrets(args: argparse.Namespace) -> dict:
         secrets['discord_webhook_url'] = None
 
     # Resolve client secrets: CLI file path > env var (JSON or file) > secrets file
-    client_secrets_path = args.client_secrets_file
+    client_secrets_path = getattr(args, 'client_secrets_file', None)
 
     if client_secrets_path and Path(client_secrets_path).is_file():
         try:
