@@ -17,6 +17,7 @@ See the GNU General Public License for more details.
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -24,6 +25,13 @@ from tt2yt import TT2YT
 
 SECRETS_DIR = Path("secrets")
 GLOBAL_SECRETS_FILE = SECRETS_DIR / "secrets.json"
+
+# Environment variable names
+ENV_TIKTOK_PROFILE = "TT2YT_TIKTOK_PROFILE"
+ENV_TIKTOK_CHANNEL_ID = "TT2YT_TIKTOK_CHANNEL_ID"
+ENV_OPENROUTER_KEY = "TT2YT_OPENROUTER_KEY"
+ENV_CLIENT_SECRETS = "TT2YT_CLIENT_SECRETS"       # JSON string of client secrets
+ENV_CLIENT_SECRETS_FILE = "TT2YT_CLIENT_SECRETS_FILE"  # path to client_secrets.json
 
 
 def load_global_secrets() -> dict:
@@ -48,16 +56,77 @@ def save_global_secrets(secrets: dict):
         print(f"Error saving secrets to {GLOBAL_SECRETS_FILE}: {e}", file=sys.stderr)
 
 
+def load_env_secrets() -> dict:
+    """Read configuration from TT2YT_* environment variables.
+
+    Supported variables:
+      TT2YT_TIKTOK_PROFILE      - TikTok username / profile slug
+      TT2YT_TIKTOK_CHANNEL_ID   - TikTok channel ID (preferred over profile)
+      TT2YT_OPENROUTER_KEY      - OpenRouter API key
+      TT2YT_CLIENT_SECRETS      - Full client_secrets JSON as a string
+      TT2YT_CLIENT_SECRETS_FILE - Path to a client_secrets.json file
+    """
+    env: dict = {}
+
+    if value := os.environ.get(ENV_TIKTOK_PROFILE):
+        env['tiktok_profile'] = value
+
+    if value := os.environ.get(ENV_TIKTOK_CHANNEL_ID):
+        env['tiktok_channel_id'] = value
+
+    if value := os.environ.get(ENV_OPENROUTER_KEY):
+        env['openrouter_key'] = value
+
+    # Inline JSON takes precedence over a file path
+    if value := os.environ.get(ENV_CLIENT_SECRETS):
+        try:
+            env['client_secrets'] = json.loads(value)
+        except json.JSONDecodeError as exc:
+            print(
+                f"Warning: {ENV_CLIENT_SECRETS} is not valid JSON and will be ignored: {exc}",
+                file=sys.stderr,
+            )
+    elif file_path := os.environ.get(ENV_CLIENT_SECRETS_FILE):
+        path = Path(file_path)
+        if path.is_file():
+            try:
+                with path.open('r') as f:
+                    env['client_secrets'] = json.load(f)
+            except Exception as exc:
+                print(
+                    f"Warning: Could not read {ENV_CLIENT_SECRETS_FILE} path '{file_path}': {exc}",
+                    file=sys.stderr,
+                )
+        else:
+            print(
+                f"Warning: {ENV_CLIENT_SECRETS_FILE} path '{file_path}' does not exist.",
+                file=sys.stderr,
+            )
+
+    return env
+
+
 def parse_secrets(args: argparse.Namespace) -> dict:
+    """Resolve configuration with priority: CLI args > env vars > secrets file."""
     global_secrets = load_global_secrets()
+    env_secrets = load_env_secrets()
     secrets = {}
     missing_keys = []
 
-    tiktok_profile = args.tiktok_profile or global_secrets.get('tiktok_profile')
+    # Priority: CLI > env > secrets file
+    tiktok_profile = (
+        args.tiktok_profile
+        or env_secrets.get('tiktok_profile')
+        or global_secrets.get('tiktok_profile')
+    )
     if tiktok_profile:
         secrets['tiktok_profile'] = tiktok_profile
 
-    tiktok_channel_id = args.tiktok_channel_id or global_secrets.get('tiktok_channel_id')
+    tiktok_channel_id = (
+        args.tiktok_channel_id
+        or env_secrets.get('tiktok_channel_id')
+        or global_secrets.get('tiktok_channel_id')
+    )
     if tiktok_channel_id:
         secrets['tiktok_channel_id'] = tiktok_channel_id
         print("Using TikTok channel ID")
@@ -70,12 +139,17 @@ def parse_secrets(args: argparse.Namespace) -> dict:
         else:
             print("Warning: Using tiktok profile instead of channel ID is more prone to errors.")
 
-    openrouter_key = args.openrouter_key or global_secrets.get('openrouter_key')
+    openrouter_key = (
+        args.openrouter_key
+        or env_secrets.get('openrouter_key')
+        or global_secrets.get('openrouter_key')
+    )
     if openrouter_key:
         secrets['openrouter_key'] = openrouter_key
     else:
         secrets['openrouter_key'] = None
 
+    # Resolve client secrets: CLI file path > env var (JSON or file) > secrets file
     client_secrets_path = args.client_secrets_file
 
     if client_secrets_path and Path(client_secrets_path).is_file():
@@ -85,6 +159,8 @@ def parse_secrets(args: argparse.Namespace) -> dict:
         except Exception as e:
             print(f"Error loading client secrets from {client_secrets_path}: {e}", file=sys.stderr)
             missing_keys.append("client_secrets")
+    elif 'client_secrets' in env_secrets:
+        secrets['client_secrets'] = env_secrets['client_secrets']
     elif 'client_secrets' in global_secrets:
         secrets['client_secrets'] = global_secrets['client_secrets']
     else:
