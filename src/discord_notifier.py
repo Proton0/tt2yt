@@ -42,6 +42,8 @@ class DiscordNotifier:
                 tb = tb[-2000:]
             desc += f"\n\n**Traceback**\n```python\n{tb}\n```"
 
+        # Clamp the full description to Discord's embed limit.
+        desc = desc[:4096]
         self._send_embed(title="❌ Video Upload Failed", description=desc, color=0xFF0000)
 
     def notify_exception(self, context: str, exception: Exception):
@@ -51,5 +53,7 @@ class DiscordNotifier:
         if len(tb) > 2000:
             tb = tb[-2000:]
         desc += f"\n\n**Traceback**\n```python\n{tb}\n```"
-        
+
+        # Clamp the full description to Discord's embed limit.
+        desc = desc[:4096]
         self._send_embed(title="⚠️ System Exception", description=desc, color=0xFFA500)

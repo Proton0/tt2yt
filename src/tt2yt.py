@@ -92,6 +92,10 @@ class TT2YT:
 
                         if Path(downloaded_file).suffix.lower() in AUDIO_EXTENSIONS:
                             logger.info(f"Skipping {video_id} as its a slideshow/photo!")
+                            try:
+                                os.remove(downloaded_file)
+                            except Exception as e:
+                                logger.error(f"Failed to delete slideshow file {downloaded_file}: {e}")
                             continue
 
                         if "(tiktok-only)" in title:

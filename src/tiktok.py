@@ -101,6 +101,16 @@ class TikTok:
 
     def download_video(self, video_id: str) -> str | None:
         DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+        if not self.tiktok_profile:
+            # When only a channel_id is configured there is no username to
+            # build a direct video URL from. yt-dlp cannot download individual
+            # videos without a username-based URL, so bail out early.
+            raise ValueError(
+                "Cannot download individual videos without a TikTok profile/username. "
+                "Please provide a tiktok_profile in addition to (or instead of) the channel_id."
+            )
+
         video_url = f"https://www.tiktok.com/@{self.tiktok_profile}/video/{video_id}"
         output_template = str(DOWNLOAD_DIR / "%(id)s.%(ext)s")
 
