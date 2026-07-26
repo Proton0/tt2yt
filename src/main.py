@@ -132,7 +132,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     main()
-else:
-    raise ImportError("tt2yt's main.py is meant to be run as a script, not imported.")
