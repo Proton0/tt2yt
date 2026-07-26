@@ -35,6 +35,7 @@ GLOBAL_SECRETS_FILE = SECRETS_DIR / "secrets.json"
 ENV_TIKTOK_PROFILE = "TT2YT_TIKTOK_PROFILE"
 ENV_TIKTOK_CHANNEL_ID = "TT2YT_TIKTOK_CHANNEL_ID"
 ENV_OPENROUTER_KEY = "TT2YT_OPENROUTER_KEY"
+ENV_DISCORD_WEBHOOK_URL = "TT2YT_DISCORD_WEBHOOK_URL"
 ENV_CLIENT_SECRETS = "TT2YT_CLIENT_SECRETS"       # JSON string of client secrets
 ENV_CLIENT_SECRETS_FILE = "TT2YT_CLIENT_SECRETS_FILE"  # path to client_secrets.json
 
@@ -68,6 +69,7 @@ def load_env_secrets() -> dict:
       TT2YT_TIKTOK_PROFILE      - TikTok username / profile slug
       TT2YT_TIKTOK_CHANNEL_ID   - TikTok channel ID (preferred over profile)
       TT2YT_OPENROUTER_KEY      - OpenRouter API key
+      TT2YT_DISCORD_WEBHOOK_URL - Discord Webhook URL for notifications
       TT2YT_CLIENT_SECRETS      - Full client_secrets JSON as a string
       TT2YT_CLIENT_SECRETS_FILE - Path to a client_secrets.json file
     """
@@ -81,6 +83,9 @@ def load_env_secrets() -> dict:
 
     if value := os.environ.get(ENV_OPENROUTER_KEY):
         env['openrouter_key'] = value
+
+    if value := os.environ.get(ENV_DISCORD_WEBHOOK_URL):
+        env['discord_webhook_url'] = value
 
     # Inline JSON takes precedence over a file path
     if value := os.environ.get(ENV_CLIENT_SECRETS):
@@ -145,6 +150,16 @@ def parse_secrets(args: argparse.Namespace) -> dict:
     else:
         secrets['openrouter_key'] = None
 
+    discord_webhook_url = (
+        getattr(args, 'discord_webhook_url', None)
+        or env_secrets.get('discord_webhook_url')
+        or global_secrets.get('discord_webhook_url')
+    )
+    if discord_webhook_url:
+        secrets['discord_webhook_url'] = discord_webhook_url
+    else:
+        secrets['discord_webhook_url'] = None
+
     # Resolve client secrets: CLI file path > env var (JSON or file) > secrets file
     client_secrets_path = args.client_secrets_file
 
@@ -172,6 +187,7 @@ def parse_secrets(args: argparse.Namespace) -> dict:
         not global_secrets or
         global_secrets.get('tiktok_profile') != secrets.get('tiktok_profile') or
         global_secrets.get('openrouter_key') != secrets.get('openrouter_key') or
+        global_secrets.get('discord_webhook_url') != secrets.get('discord_webhook_url') or
         'client_secrets' in secrets and global_secrets.get('client_secrets') != secrets.get('client_secrets') or
         global_secrets.get("tiktok_channel_id") != secrets.get("tiktok_channel_id")
     )
@@ -189,6 +205,7 @@ def main():
     parser.add_argument('-t', '--tiktok_profile', type=str, help='TikTok profile')
     parser.add_argument("-tc", "--tiktok-channel-id", type=str, help="TikTok Channel ID")
     parser.add_argument('-o', '--openrouter_key', type=str, help='OpenRouter API key')
+    parser.add_argument('-d', '--discord_webhook_url', type=str, help='Discord Webhook URL')
     parser.add_argument('-c', '--client_secrets_file', type=str, help='Google client secrets file path',
                         default="secrets/client_secrets.json")
 
