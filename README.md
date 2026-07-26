@@ -21,6 +21,7 @@ tt2yt is a Python script that allows you to upload TikTok videos directly to You
  - OpenRouter API key (Optional, for AI-generated descriptions)
  - Google Client Secrets JSON file for YouTube API authentication
 
+
 ## Installation:
 
 1. Clone the repository:
@@ -33,8 +34,6 @@ tt2yt is a Python script that allows you to upload TikTok videos directly to You
 > If you want the latest features, you can run `git checkout experimental` to get experimental features.
 >
 
-
-
 2. Set up Google API credentials:
     - Go to the [Google Cloud Console](https://console.cloud.google.com/).
     - Create a new project and enable the YouTube Data API v3.
@@ -45,10 +44,10 @@ tt2yt is a Python script that allows you to upload TikTok videos directly to You
    
    ```bash
    # With OpenRouter AI descriptions:
-   ./start.sh -tc <TIKTOK CHANNEL ID> -o <OPENROUTER API KEY> -c secrets/client_secrets.json
+   ./start.sh -tc <TIKTOK CHANNEL ID> -o <OPENROUTER API KEY> -d <DISCORD WEBHOOK URL "OPTIONAL"> -c secrets/client_secrets.json
 
    # Without OpenRouter (falls back to original TikTok caption):
-   ./start.sh -tc <TIKTOK CHANNEL ID> -c secrets/client_secrets.json
+   ./start.sh -tc <TIKTOK CHANNEL ID> -d <DISCORD WEBHOOK URL "OPTIONAL"> -c secrets/client_secrets.json
    ```
 
 > [!NOTE]
@@ -62,7 +61,7 @@ tt2yt is a Python script that allows you to upload TikTok videos directly to You
 > If you dont want to do this, you can supply `-t <TIKTOK PROFILE>` instead of `-tc` but
 > it is a LOT better to use channel ID as TikTok may block yt-dlp from scraping your profile
 
-4. Run tt2yt:
+3. Run tt2yt:
    ```bash
    ./start.sh
    ```
@@ -71,6 +70,20 @@ tt2yt is a Python script that allows you to upload TikTok videos directly to You
 > The script automatically handles OAuth access token refreshes while running, but if it has been stopped for a long time or credentials are revoked, you may need to re-run it interactively to sign in again.
 >
 > YouTube has a upload quota for the API (~6 per day) so uploads may fail!
+
+## Docker Support
+
+Follow the installation and instead of running `start.sh`, run the following commands
+
+1. Build the Docker image:
+   ```bash
+   docker build -t tt2yt .
+   ```
+
+2. Set up the Docker container:
+   ```bash
+    docker compose run -it --rm -v $(pwd)/secrets:/app/secrets tt2yt -tc <TIKTOK CHANNEL ID> -o <OPENROUTER API KEY> -d <DISCORD WEBHOOK URL "OPTIONAL"> -c secrets/client_secrets.json
+   ```
 
 ## Credits:
 
