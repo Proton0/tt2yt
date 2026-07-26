@@ -82,6 +82,7 @@ def test_run_skips_tiktok_only_tag(mock_tracker, mock_or, mock_tiktok, mock_yt, 
 
     mock_tiktok.return_value.get_videos.return_value = [{"id": "vid_exclusive", "title": "My Video (tiktok-only)"}]
     mock_tracker.return_value.is_uploaded.return_value = False
+    mock_tracker.return_value.is_recently_failed.return_value = False
     mock_exists.return_value = True
     mock_tiktok.return_value.download_video.return_value = "downloads/vid_exclusive.mp4"
 
@@ -105,6 +106,7 @@ def test_run_skips_audio_slideshow(mock_tracker, mock_or, mock_tiktok, mock_yt, 
 
     mock_tiktok.return_value.get_videos.return_value = [{"id": "vid_audio", "title": "Photo slideshow"}]
     mock_tracker.return_value.is_uploaded.return_value = False
+    mock_tracker.return_value.is_recently_failed.return_value = False
     mock_exists.return_value = True
     # Returns an audio extension instead of a video
     mock_tiktok.return_value.download_video.return_value = "downloads/vid_audio.mp3"
@@ -130,6 +132,7 @@ def test_run_openrouter_failure_falls_back_to_title(mock_tracker, mock_or, mock_
 
     mock_tiktok.return_value.get_videos.return_value = [{"id": "vid123", "title": "Raw Title Only"}]
     mock_tracker.return_value.is_uploaded.return_value = False
+    mock_tracker.return_value.is_recently_failed.return_value = False
     mock_exists.return_value = True
     mock_tiktok.return_value.download_video.return_value = "downloads/vid123.mp4"
 
@@ -160,6 +163,7 @@ def test_run_handles_youtube_upload_failure(mock_tracker, mock_or, mock_tiktok, 
 
     mock_tiktok.return_value.get_videos.return_value = [{"id": "vid123", "title": "Test"}]
     mock_tracker.return_value.is_uploaded.return_value = False
+    mock_tracker.return_value.is_recently_failed.return_value = False
     mock_exists.return_value = True
     mock_tiktok.return_value.download_video.return_value = "downloads/vid123.mp4"
 
@@ -219,6 +223,7 @@ def test_run_download_fails(mock_tracker, mock_or, mock_tiktok, mock_yt, mock_sl
     mock_sleep.side_effect = StopIteration
     mock_tiktok.return_value.get_videos.return_value = [{"id": "vid1", "title": "Test"}]
     mock_tracker.return_value.is_uploaded.return_value = False
+    mock_tracker.return_value.is_recently_failed.return_value = False
     
     # Returns None or a path that doesn't exist
     mock_tiktok.return_value.download_video.return_value = None
@@ -241,6 +246,7 @@ def test_run_remove_exception(mock_tracker, mock_or, mock_tiktok, mock_yt, mock_
     mock_sleep.side_effect = StopIteration
     mock_tiktok.return_value.get_videos.return_value = [{"id": "vid1", "title": "Test"}]
     mock_tracker.return_value.is_uploaded.return_value = False
+    mock_tracker.return_value.is_recently_failed.return_value = False
     mock_exists.return_value = True
     mock_tiktok.return_value.download_video.return_value = "downloads/vid1.mp4"
     mock_yt.return_value.upload_video.return_value = "yt_id_1"
@@ -253,3 +259,73 @@ def test_run_remove_exception(mock_tracker, mock_or, mock_tiktok, mock_yt, mock_
         app.run()
     
     mock_yt.return_value.upload_video.assert_called_once()
+
+@patch("tt2yt.time.sleep")
+@patch("tt2yt.YouTube")
+@patch("tt2yt.TikTok")
+@patch("tt2yt.OpenRouter")
+@patch("tt2yt.UploadTracker")
+def test_run_skips_recently_failed(mock_tracker, mock_or, mock_tiktok, mock_yt, mock_sleep):
+    mock_sleep.side_effect = StopIteration
+
+    mock_tiktok.return_value.get_videos.return_value = [{"id": "vid_failed", "title": "Failed Video"}]
+    mock_tracker.return_value.is_uploaded.return_value = False
+    mock_tracker.return_value.is_recently_failed.return_value = True  # Recently failed
+
+    app = TT2YT({"tiktok_profile": "vproton0", "openrouter_key": "key"}, "dummy.json")
+
+    with pytest.raises(StopIteration):
+        app.run()
+
+    # ensure it didnt download
+    mock_tiktok.return_value.download_video.assert_not_called()
+
+@patch("tt2yt.time.sleep")
+@patch("tt2yt.os.path.exists")
+@patch("tt2yt.os.remove")
+@patch("tt2yt.YouTube")
+@patch("tt2yt.TikTok")
+@patch("tt2yt.OpenRouter")
+@patch("tt2yt.UploadTracker")
+def test_run_youtube_upload_exception(mock_tracker, mock_or, mock_tiktok, mock_yt, mock_remove, mock_exists, mock_sleep):
+    mock_sleep.side_effect = StopIteration
+
+    mock_tiktok.return_value.get_videos.return_value = [{"id": "vid_err", "title": "Test"}]
+    mock_tracker.return_value.is_uploaded.return_value = False
+    mock_tracker.return_value.is_recently_failed.return_value = False
+    mock_exists.return_value = True
+    mock_tiktok.return_value.download_video.return_value = "downloads/vid_err.mp4"
+
+    # YouTube upload raises an exception
+    mock_yt.return_value.upload_video.side_effect = Exception("YouTube API Error")
+
+    app = TT2YT({"tiktok_profile": "vproton0", "openrouter_key": "key"}, "dummy.json")
+
+    with pytest.raises(StopIteration):
+        app.run()
+
+    # ensure it marked it as failed and deleted the file
+    mock_tracker.return_value.mark_as_failed.assert_called_once_with("vid_err")
+    mock_remove.assert_called_once()
+
+@patch("tt2yt.time.sleep")
+@patch("tt2yt.YouTube")
+@patch("tt2yt.TikTok")
+@patch("tt2yt.OpenRouter")
+@patch("tt2yt.UploadTracker")
+def test_run_download_exception(mock_tracker, mock_or, mock_tiktok, mock_yt, mock_sleep):
+    mock_sleep.side_effect = StopIteration
+
+    mock_tiktok.return_value.get_videos.return_value = [{"id": "vid_dl_err", "title": "Test"}]
+    mock_tracker.return_value.is_uploaded.return_value = False
+    mock_tracker.return_value.is_recently_failed.return_value = False
+    
+    # Download raises an exception
+    mock_tiktok.return_value.download_video.side_effect = Exception("Network Error during download")
+
+    app = TT2YT({"tiktok_profile": "vproton0", "openrouter_key": "key"}, "dummy.json")
+
+    with pytest.raises(StopIteration):
+        app.run()
+
+    mock_yt.return_value.upload_video.assert_not_called()

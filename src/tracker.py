@@ -48,6 +48,13 @@ class UploadTracker:
                              CURRENT_TIMESTAMP
                          )
                          """)
+            conn.execute("""
+                         CREATE TABLE IF NOT EXISTS failed_uploads
+                         (
+                             tiktok_id TEXT PRIMARY KEY,
+                             failed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                         )
+                         """)
             conn.commit()
 
     def is_uploaded(self, tiktok_id: str) -> bool:
@@ -64,4 +71,29 @@ class UploadTracker:
                 "INSERT OR IGNORE INTO uploads (tiktok_id, youtube_id) VALUES (?, ?)",
                 (tiktok_id, youtube_id)
             )
+            conn.execute(
+                "DELETE FROM failed_uploads WHERE tiktok_id = ?",
+                (tiktok_id,)
+            )
             conn.commit()
+
+    def is_recently_failed(self, tiktok_id: str) -> bool:
+        logger.info(f"Checking if video {tiktok_id} is a recent failed upload")
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT 1 FROM failed_uploads 
+                WHERE tiktok_id = ? 
+                AND failed_at > datetime('now', '-24 hours')
+            """, (tiktok_id,))
+            return cursor.fetchone() is not None
+
+    def mark_as_failed(self, tiktok_id: str):
+        logger.info(f"Set {tiktok_id} as failed upload")
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO failed_uploads (tiktok_id, failed_at) VALUES (?, CURRENT_TIMESTAMP)",
+                (tiktok_id,)
+            )
+            conn.commit()
+
