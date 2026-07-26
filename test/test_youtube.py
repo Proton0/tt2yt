@@ -132,7 +132,7 @@ def test_authenticate_no_credentials_flow(mock_flow_from_file, mock_exists, mock
     with patch("builtins.open", mock_open()) as mock_file:
         creds = yt._authenticate()
         
-    mock_flow.run_local_server.assert_called_once_with(port=0)
+    mock_flow.run_local_server.assert_called_once_with(port=0, open_browser=False)
     
     handle = mock_file()
     handle.write.assert_called_once_with('{"token": "test"}')
