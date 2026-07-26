@@ -74,11 +74,16 @@ class TT2YT:
                         if self.tracker.is_uploaded(video_id):
                             continue
 
+                        if self.tracker.is_recently_failed(video_id):
+                            logger.info(f"Skipping {video_id} as it recently failed to upload (within 24h)")
+                            continue
+
                         logger.info(f"Processing video: {video_id}")
                         downloaded_file = self.tiktok.download_video(video_id)
 
                         if not downloaded_file or not os.path.exists(downloaded_file):
                             logger.error(f"Failed to download {video_id}")
+                            self.tracker.mark_as_failed(video_id)
                             continue
 
                         if Path(downloaded_file).suffix.lower() in AUDIO_EXTENSIONS:
@@ -105,7 +110,13 @@ class TT2YT:
                                 self.tracker.mark_as_uploaded(video_id, yt_video_id)
                                 logger.info(f"Uploaded tiktok video {video_id} to youtube ({yt_video_id})")
                             else:
+                                self.tracker.mark_as_failed(video_id)
                                 logger.error(f"Failed to upload {downloaded_file}")
+
+                        except Exception as e:
+                            self.tracker.mark_as_failed(video_id)
+                            raise
+
 
                         finally:
                             try:
