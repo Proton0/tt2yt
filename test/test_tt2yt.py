@@ -175,3 +175,63 @@ def test_run_survives_unhandled_loop_exception(mock_tracker, mock_or, mock_tikto
         app.run()
 
     assert mock_sleep.call_count == 2
+
+@patch("tt2yt.time.sleep")
+@patch("tt2yt.YouTube")
+@patch("tt2yt.TikTok")
+@patch("tt2yt.OpenRouter")
+@patch("tt2yt.UploadTracker")
+def test_run_no_videos(mock_tracker, mock_or, mock_tiktok, mock_yt, mock_sleep):
+    mock_sleep.side_effect = StopIteration
+    mock_tiktok.return_value.get_videos.return_value = []
+    
+    app = TT2YT({"tiktok_profile": "vproton0", "openrouter_key": "key"}, "dummy.json")
+    
+    with pytest.raises(StopIteration):
+        app.run()
+    
+    mock_tiktok.return_value.download_video.assert_not_called()
+
+@patch("tt2yt.time.sleep")
+@patch("tt2yt.YouTube")
+@patch("tt2yt.TikTok")
+@patch("tt2yt.OpenRouter")
+@patch("tt2yt.UploadTracker")
+def test_run_download_fails(mock_tracker, mock_or, mock_tiktok, mock_yt, mock_sleep):
+    mock_sleep.side_effect = StopIteration
+    mock_tiktok.return_value.get_videos.return_value = [{"id": "vid1", "title": "Test"}]
+    mock_tracker.return_value.is_uploaded.return_value = False
+    
+    # Returns None or a path that doesn't exist
+    mock_tiktok.return_value.download_video.return_value = None
+    
+    app = TT2YT({"tiktok_profile": "vproton0", "openrouter_key": "key"}, "dummy.json")
+    
+    with pytest.raises(StopIteration):
+        app.run()
+    
+    mock_yt.return_value.upload_video.assert_not_called()
+
+@patch("tt2yt.time.sleep")
+@patch("tt2yt.os.path.exists")
+@patch("tt2yt.os.remove")
+@patch("tt2yt.YouTube")
+@patch("tt2yt.TikTok")
+@patch("tt2yt.OpenRouter")
+@patch("tt2yt.UploadTracker")
+def test_run_remove_exception(mock_tracker, mock_or, mock_tiktok, mock_yt, mock_remove, mock_exists, mock_sleep):
+    mock_sleep.side_effect = StopIteration
+    mock_tiktok.return_value.get_videos.return_value = [{"id": "vid1", "title": "Test"}]
+    mock_tracker.return_value.is_uploaded.return_value = False
+    mock_exists.return_value = True
+    mock_tiktok.return_value.download_video.return_value = "downloads/vid1.mp4"
+    mock_yt.return_value.upload_video.return_value = "yt_id_1"
+    
+    mock_remove.side_effect = Exception("Permission Denied")
+    
+    app = TT2YT({"tiktok_profile": "vproton0", "openrouter_key": "key"}, "dummy.json")
+    
+    with pytest.raises(StopIteration):
+        app.run()
+    
+    mock_yt.return_value.upload_video.assert_called_once()
