@@ -1,0 +1,11 @@
+services:
+  tt2yt:
+    build: .
+    restart: unless-stopped
+
+    volumes:
+      - ./secrets:/app/secrets
+      - ./downloads:/app/downloads
+      - ./logs:/app/logs
+
+    command: ["-tc", "YOUR_TIKTOK_CHANNEL_ID", "-o", "YOUR_OPENROUTER_API_KEY", "-c", "secrets/client_secrets.json"]

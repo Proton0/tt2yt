@@ -6,16 +6,18 @@ type -P python3 >/dev/null 2>&1 || {
     exit 1
 }
 
-if [ ! -d ".venv" ]; then
-    echo "Creating virtual environment..."
-    python3 -m venv .venv
-fi
+if [ ! -f /.dockerenv ]; then
+    if [ ! -d ".venv" ]; then
+        echo "Creating virtual environment..."
+        python3 -m venv .venv
+    fi
 
-source .venv/bin/activate
+    source .venv/bin/activate
 
-if [ ! -f ".venv/.installed" ]; then
-    pip install -r requirements.txt
-    touch .venv/.installed
+    if [ ! -f ".venv/.installed" ]; then
+        pip install -r requirements.txt
+        touch .venv/.installed
+    fi
 fi
 
 echo "Updating yt-dlp..."
