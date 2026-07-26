@@ -16,7 +16,6 @@ See the GNU General Public License for more details.
 """
 
 import os
-import sys
 from pathlib import Path
 
 from google.auth.transport.requests import Request
@@ -25,6 +24,10 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.auth.exceptions import RefreshError
+
+from logger import get_logger
+
+logger = get_logger()
 
 
 SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
@@ -41,16 +44,16 @@ class YouTube:
             self.youtube = build("youtube", "v3", credentials=self.credentials)
 
         except RefreshError as e:
-            print(f"YouTube login has expired, Please authenticate again. (exception: {e})")
+            logger.error(f"YouTube login has expired, Please authenticate again. (exception: {e})")
 
             if os.path.exists("secrets/token.json"):
                 os.remove("secrets/token.json")
 
-            print("Please re-run tt2yt to reauthenticate.")
+            logger.error("Please re-run tt2yt to reauthenticate.")
             raise
 
     def _authenticate(self) -> Credentials:
-        print("Authenticating with Google")
+        logger.info("Authenticating with Google")
         credentials = None
 
         if TOKEN_FILE.exists():
@@ -58,10 +61,10 @@ class YouTube:
 
         if not credentials or not credentials.valid:
             if credentials and credentials.expired and credentials.refresh_token:
-                print("Access token expired, refreshing credentials")
+                logger.info("Access token expired, refreshing credentials")
                 credentials.refresh(Request())
             else:
-                print("\nLaunching browser window for Google auth")
+                logger.info("Launching browser window for Google auth")
                 if not os.path.exists(self.client_secrets_file):
                     raise FileNotFoundError(
                         f"Could not find client_secrets file at: {self.client_secrets_file}. "
@@ -74,8 +77,8 @@ class YouTube:
             TOKEN_FILE.parent.mkdir(parents=True, exist_ok=True)
             with open(TOKEN_FILE, "w") as token:
                 token.write(credentials.to_json())
-            print("Session saved successfully.")
-        print("Authenticated successfully!")
+            logger.info("Session saved successfully.")
+        logger.info("Authenticated successfully!")
         return credentials
 
     def _process_title(self, title: str) -> str:
@@ -89,7 +92,7 @@ class YouTube:
         return title
 
     def upload_video(self, file_path: str, title: str, description: str = "") -> str | None:
-        print("Preparing to upload video")
+        logger.info("Preparing to upload video")
 
         title = self._process_title(title)
 
@@ -108,7 +111,7 @@ class YouTube:
         media = MediaFileUpload(file_path, chunksize=1024 * 1024, resumable=True)
 
         try:
-            print("Uploading the video now")
+            logger.info("Uploading the video now")
             request = self.youtube.videos().insert(
                 part="snippet,status",
                 body=body,
@@ -119,20 +122,20 @@ class YouTube:
             while response is None:
                 status, response = request.next_chunk()
                 if status:
-                    print(f"Uploading progress: {int(status.progress() * 100)}%")
+                    logger.info(f"Uploading progress: {int(status.progress() * 100)}%")
 
             video_id = response.get("id")
-            print(f"Upload complete, Video ID assigned: {video_id}")
+            logger.info(f"Upload complete, Video ID assigned: {video_id}")
             return video_id
 
         except Exception as e:
-            print(f"Exception : {e}", file=sys.stderr)
+            logger.error(f"Exception : {e}")
             return None
 
 
 if __name__ == "__main__": # pragma: no cover
     try:
         uploader = YouTube("secrets/client_secrets.json")
-        print("YouTube authenticated successfully")
+        logger.info("YouTube authenticated successfully")
     except Exception as err:
-        print(f"Initialization Failed: {err}")
+        logger.error(f"Initialization Failed: {err}")

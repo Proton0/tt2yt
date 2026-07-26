@@ -12,3 +12,4 @@ secrets/*
 downloads
 .coverage
 mutants
+logs

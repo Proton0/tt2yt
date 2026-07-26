@@ -36,12 +36,12 @@ def test_load_global_secrets_valid_file():
          patch("pathlib.Path.open", mock_open(read_data=mock_data)):
         assert main.load_global_secrets() == {"tiktok_profile": "test_profile"}
 
-@patch('sys.stderr', new_callable=MagicMock)
-def test_load_global_secrets_invalid_json(mock_stderr):
+@patch('main.logger')
+def test_load_global_secrets_invalid_json(mock_logger):
     with patch("pathlib.Path.is_file", return_value=True), \
          patch("pathlib.Path.open", mock_open(read_data="invalid json")):
         assert main.load_global_secrets() == {}
-        mock_stderr.write.assert_any_call("Warning: Failed to decode secrets/secrets.json. Using empty secrets.")
+        mock_logger.warning.assert_called_once_with("Failed to decode secrets/secrets.json. Using empty secrets.")
 
 
 
@@ -55,12 +55,12 @@ def test_save_global_secrets_success():
         written = "".join(call.args[0] for call in handle.write.mock_calls)
         assert '"tiktok_profile": "test_profile"' in written
 
-@patch('sys.stderr', new_callable=MagicMock)
-def test_save_global_secrets_exception(mock_stderr):
+@patch('main.logger')
+def test_save_global_secrets_exception(mock_logger):
     secrets = {"test": "data"}
     with patch("pathlib.Path.mkdir", side_effect=Exception("mkdir failed")):
         main.save_global_secrets(secrets)
-        mock_stderr.write.assert_any_call("Error saving secrets to secrets/secrets.json: mkdir failed")
+        mock_logger.error.assert_called_once_with("Error saving secrets to secrets/secrets.json: mkdir failed")
 
 
 
@@ -91,16 +91,15 @@ def test_load_env_secrets_client_secrets_inline_json():
         result = main.load_env_secrets()
     assert result["client_secrets"] == payload
 
-@patch('sys.stderr', new_callable=MagicMock)
-def test_load_env_secrets_client_secrets_invalid_json(mock_stderr):
+@patch('main.logger')
+def test_load_env_secrets_client_secrets_invalid_json(mock_logger):
     env = {"TT2YT_CLIENT_SECRETS": "not-valid-json"}
     with patch.dict("os.environ", env, clear=True):
         result = main.load_env_secrets()
     assert "client_secrets" not in result
-    # stderr should have warned the user
-    written = "".join(call.args[0] for call in mock_stderr.write.mock_calls)
-    assert "TT2YT_CLIENT_SECRETS" in written
-    assert "not valid JSON" in written
+    mock_logger.warning.assert_called_once()
+    assert "TT2YT_CLIENT_SECRETS" in mock_logger.warning.call_args[0][0]
+    assert "not valid JSON" in mock_logger.warning.call_args[0][0]
 
 def test_load_env_secrets_client_secrets_file_path():
     payload = {"installed": {"client_id": "from_file"}}
@@ -111,26 +110,24 @@ def test_load_env_secrets_client_secrets_file_path():
         result = main.load_env_secrets()
     assert result["client_secrets"] == payload
 
-@patch('sys.stderr', new_callable=MagicMock)
-def test_load_env_secrets_client_secrets_file_not_found(mock_stderr):
+@patch('main.logger')
+def test_load_env_secrets_client_secrets_file_not_found(mock_logger):
     env = {"TT2YT_CLIENT_SECRETS_FILE": "/nonexistent/secrets.json"}
     with patch.dict("os.environ", env, clear=True), \
          patch("pathlib.Path.is_file", return_value=False):
         result = main.load_env_secrets()
     assert "client_secrets" not in result
-    written = "".join(call.args[0] for call in mock_stderr.write.mock_calls)
-    assert "does not exist" in written
+    mock_logger.warning.assert_called_once_with("TT2YT_CLIENT_SECRETS_FILE path '/nonexistent/secrets.json' does not exist.")
 
-@patch('sys.stderr', new_callable=MagicMock)
-def test_load_env_secrets_client_secrets_file_read_error(mock_stderr):
+@patch('main.logger')
+def test_load_env_secrets_client_secrets_file_read_error(mock_logger):
     env = {"TT2YT_CLIENT_SECRETS_FILE": "/fake/path/client_secrets.json"}
     with patch.dict("os.environ", env, clear=True), \
          patch("pathlib.Path.is_file", return_value=True), \
          patch("pathlib.Path.open", side_effect=OSError("permission denied")):
         result = main.load_env_secrets()
     assert "client_secrets" not in result
-    written = "".join(call.args[0] for call in mock_stderr.write.mock_calls)
-    assert "Could not read" in written
+    mock_logger.warning.assert_called_once_with("Could not read TT2YT_CLIENT_SECRETS_FILE path '/fake/path/client_secrets.json': permission denied")
 
 def test_load_env_secrets_inline_json_takes_precedence_over_file():
     """TT2YT_CLIENT_SECRETS (JSON) should win over TT2YT_CLIENT_SECRETS_FILE."""
@@ -217,8 +214,8 @@ def test_parse_secrets_missing_client_secrets():
         with pytest.raises(RuntimeError, match="Missing required configuration for: client_secrets_file"):
             main.parse_secrets(args)
 
-@patch('sys.stderr', new_callable=MagicMock)
-def test_parse_secrets_invalid_client_secrets_file(mock_stderr):
+@patch('main.logger')
+def test_parse_secrets_invalid_client_secrets_file(mock_logger):
     args = argparse.Namespace(
         tiktok_profile="profile",
         tiktok_channel_id=None,
@@ -231,7 +228,7 @@ def test_parse_secrets_invalid_client_secrets_file(mock_stderr):
          patch("builtins.open", side_effect=Exception("read failed")):
         with pytest.raises(RuntimeError, match="Missing required configuration for: client_secrets"):
             main.parse_secrets(args)
-    mock_stderr.write.assert_any_call("Error loading client secrets from dummy.json: read failed")
+    mock_logger.error.assert_called_once_with("Error loading client secrets from dummy.json: read failed")
 
 
 
@@ -331,11 +328,11 @@ def test_main_execution():
         mock_tt2yt.assert_called_once()
         mock_tt2yt.return_value.run.assert_called_once()
 
-@patch('sys.stderr', new_callable=MagicMock)
-def test_main_runtime_error(mock_stderr):
+@patch('main.logger')
+def test_main_runtime_error(mock_logger):
     with patch("sys.argv", ["main.py"]), \
          patch("main.parse_secrets", side_effect=RuntimeError("Test error")):
         with pytest.raises(SystemExit) as excinfo:
             main.main()
         assert excinfo.value.code == 1
-        mock_stderr.write.assert_any_call("Fatal Error: Test error")
+        mock_logger.critical.assert_called_once_with("Fatal Error: Test error")

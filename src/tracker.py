@@ -18,6 +18,10 @@ See the GNU General Public License for more details.
 import sqlite3
 from pathlib import Path
 
+from logger import get_logger
+
+logger = get_logger()
+
 DB_FILE = Path("secrets/upload_history.db")
 
 
@@ -47,14 +51,14 @@ class UploadTracker:
             conn.commit()
 
     def is_uploaded(self, tiktok_id: str) -> bool:
-        print(f"Checking if video {tiktok_id} is uploaded")
+        logger.info(f"Checking if video {tiktok_id} is uploaded")
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT 1 FROM uploads WHERE tiktok_id = ?", (tiktok_id,))
             return cursor.fetchone() is not None
 
     def mark_as_uploaded(self, tiktok_id: str, youtube_id: str):
-        print(f"Set {tiktok_id} as uploaded")
+        logger.info(f"Set {tiktok_id} as uploaded")
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
                 "INSERT OR IGNORE INTO uploads (tiktok_id, youtube_id) VALUES (?, ?)",

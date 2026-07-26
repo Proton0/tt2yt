@@ -176,12 +176,12 @@ def test_upload_video_success(mock_media, yt):
     mock_request.next_chunk.assert_called()
 
 @patch("youtube.MediaFileUpload")
-@patch("sys.stderr", new_callable=MagicMock)
-def test_upload_video_exception(mock_stderr, mock_media, yt):
+@patch("youtube.logger")
+def test_upload_video_exception(mock_logger, mock_media, yt):
     yt.youtube = MagicMock()
     yt.youtube.videos().insert.side_effect = Exception("API Error")
     
     video_id = yt.upload_video("dummy.mp4", "Test Video", "")
     
     assert video_id is None
-    mock_stderr.write.assert_any_call("Exception : API Error")
+    mock_logger.error.assert_called_once_with("Exception : API Error")
