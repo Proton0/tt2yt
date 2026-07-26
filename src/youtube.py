@@ -88,7 +88,7 @@ class YouTube:
 
         return title
 
-    def upload_video(self, file_path: str, title: str, description: str = "") -> str | None: # pragma: no cover
+    def upload_video(self, file_path: str, title: str, description: str = "") -> str | None:
         print("Preparing to upload video")
 
         title = self._process_title(title)
