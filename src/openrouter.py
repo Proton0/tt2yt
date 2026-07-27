@@ -71,7 +71,16 @@ class OpenRouter:
 
             data = response.json()
 
-            description = data["choices"][0]["message"]["content"].strip()
+            try: # quick and dirty fix for testmalformedresponses lmafo
+                description = data["choices"][0]["message"]["content"]
+            except TypeError as e:
+                logger.error(e)
+                return None
+
+            if description is None:
+                logger.error("description none?")
+                return None
+            description = description.strip()
 
             logger.info("Generated description")
 
