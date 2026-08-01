@@ -54,7 +54,7 @@ class TT2YT:
         self.tiktok = TikTok(secrets.get("tiktok_profile"), secrets.get("tiktok_channel_id"))
         self.tracker = UploadTracker()
         self.openrouter = OpenRouter(secrets['openrouter_key'])
-        self.discord = DiscordNotifier(secrets.get('discord_webhook_url'))
+        self.discord = DiscordNotifier(secrets.get('discord_webhook_url'), secrets=self.secrets)
 
         commit_hash, branch_name, current_tag = get_git_data()
         logger.info(f"tt2yt: YouTube Uploader for TikTok videos (version: {current_tag}, commit: {commit_hash}, branch: {branch_name})")
