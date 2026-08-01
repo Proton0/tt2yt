@@ -124,7 +124,6 @@ class TT2YT:
                         except Exception as e:
                             self.tracker.mark_as_failed(video_id)
                             self.discord.notify_failure(video_id, title, "Exception during YouTube upload", e)
-                            raise
 
 
                         finally:
