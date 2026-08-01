@@ -100,6 +100,8 @@ class TT2YT:
 
                         if "(tiktok-only)" in title:
                             logger.info(f"Skipping video {video_id} as tiktok only marker was detected")
+                            if downloaded_file and os.path.exists(downloaded_file):
+                                os.remove(downloaded_file)
                             continue
 
                         try:
