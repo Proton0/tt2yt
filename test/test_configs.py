@@ -214,7 +214,7 @@ def test_parse_secrets_invalid_client_secrets_file(mock_logger):
 
 def test_parse_secrets_env_vars_override_global():
     args = argparse.Namespace(
-        tiktok_profile=None,
+        tiktok_profile="test",
         tiktok_channel_id=None,
         openrouter_key=None,
         discord_webhook_url=None,
@@ -243,7 +243,7 @@ def test_parse_secrets_env_vars_override_global():
 
 def test_parse_secrets_cli_overrides_env_vars():
     args = argparse.Namespace(
-        tiktok_profile=None,
+        tiktok_profile="test",
         tiktok_channel_id="cli_channel",
         openrouter_key="cli_key",
         discord_webhook_url="cli_webhook",
@@ -269,7 +269,7 @@ def test_parse_secrets_cli_overrides_env_vars():
 
 def test_parse_secrets_env_client_secrets_used_when_no_cli_file():
     args = argparse.Namespace(
-        tiktok_profile=None,
+        tiktok_profile="test",
         tiktok_channel_id="some_channel",
         openrouter_key=None,
         discord_webhook_url=None,

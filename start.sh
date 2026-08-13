@@ -20,8 +20,5 @@ if [ ! -f /.dockerenv ]; then
     fi
 fi
 
-echo "Updating yt-dlp..."
-pip install -U yt-dlp
-
 echo "Starting tt2yt..."
 python3 src/main.py "$@"

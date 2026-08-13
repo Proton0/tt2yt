@@ -44,10 +44,10 @@ tt2yt is a Python script that allows you to upload TikTok videos directly to You
    
    ```bash
    # With OpenRouter AI descriptions:
-   ./start.sh -tc <TIKTOK CHANNEL ID> -o <OPENROUTER API KEY> -d <DISCORD WEBHOOK URL "OPTIONAL"> -c secrets/client_secrets.json
+   ./start.sh -t <TIKTOK PROFILE> -tc <TIKTOK CHANNEL ID> -o <OPENROUTER API KEY> -d <DISCORD WEBHOOK URL "OPTIONAL"> -c secrets/client_secrets.json
 
    # Without OpenRouter (falls back to original TikTok caption):
-   ./start.sh -tc <TIKTOK CHANNEL ID> -d <DISCORD WEBHOOK URL "OPTIONAL"> -c secrets/client_secrets.json
+   ./start.sh -t <TIKTOK PROFILE> -tc <TIKTOK CHANNEL ID> -d <DISCORD WEBHOOK URL "OPTIONAL"> -c secrets/client_secrets.json
    ```
 
 > [!NOTE]
@@ -58,8 +58,8 @@ tt2yt is a Python script that allows you to upload TikTok videos directly to You
 > 
 > Example: `yt-dlp --print channel_id https://www.tiktok.com/@vproton0/video/7666384110281215252`
 > 
-> If you dont want to do this, you can supply `-t <TIKTOK PROFILE>` instead of `-tc` but
-> it is a LOT better to use channel ID as TikTok may block yt-dlp from scraping your profile
+> If you don't want to do this, you can just remove the `-tc` flag, but
+> it's a lot better to provide a channel ID, as TikTok may block yt-dlp from scraping your profile
 
 3. Run tt2yt:
    ```bash

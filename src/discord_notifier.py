@@ -1,16 +1,58 @@
+import re
 import requests
 import traceback
 from logger import get_logger
 
 logger = get_logger()
 
+WIN_PATH_REGEX = r'(?<![a-zA-Z0-9_])[a-zA-Z]:[\\/](?:[^\\/:*?"<>|\r\n]+[\\/])*(?:[^\\/:*?"<>|\r\n]+)'
+UNIX_PATH_REGEX = r'(?<![:/\w])/(?:[\w.-]+/)+[\w.-]*'
+REL_PATH_REGEX = r'(?<![a-zA-Z0-9_])(?:\.|\.\.)[\\/](?:[\w.-]+[\\/])*(?:[\w.-]+)'
+PATH_PATTERN = re.compile(f'({WIN_PATH_REGEX}|{UNIX_PATH_REGEX}|{REL_PATH_REGEX})')
+
 class DiscordNotifier:
-    def __init__(self, webhook_url: str = None):
+    def __init__(self, webhook_url: str = None, secrets: dict | list | set | str = None):
         self.webhook_url = webhook_url
+        self.secrets = set()
+        if secrets:
+            self.set_secrets(secrets)
+
+    def set_secrets(self, secrets):
+        self.secrets = self._extract_secret_strings(secrets)
+
+    def _extract_secret_strings(self, obj) -> set[str]:
+        secret_set = set()
+        if isinstance(obj, str):
+            s = obj.strip()
+            if s:
+                secret_set.add(s)
+        elif isinstance(obj, dict):
+            for v in obj.values():
+                secret_set.update(self._extract_secret_strings(v))
+        elif isinstance(obj, (list, tuple, set)):
+            for item in obj:
+                secret_set.update(self._extract_secret_strings(item))
+        return secret_set
+
+    def _redact(self, text: str) -> str:
+        if not text or not isinstance(text, str):
+            return text
+
+        # Redact secrets
+        for secret in sorted(self.secrets, key=len, reverse=True):
+            if secret:
+                text = text.replace(secret, "[REDACTED]")
+
+        # Redact file paths
+        text = PATH_PATTERN.sub("[REDACTED]", text)
+        return text
 
     def _send_embed(self, title: str, description: str, color: int):
         if not self.webhook_url:
             return
+
+        title = self._redact(title)
+        description = self._redact(description)
 
         embed = {
             "title": title,

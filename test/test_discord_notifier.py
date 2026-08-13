@@ -69,3 +69,98 @@ def test_request_exception_handled(mock_post, caplog):
     notifier.notify_success("vid", "yt", "Title")
     
     assert "Failed to send Discord webhook" in caplog.text
+
+
+@patch("requests.post")
+def test_redact_secrets(mock_post):
+    secrets = {
+        "openrouter_key": "sk-or-v1-super-secret-key-12345",
+        "tiktok_profile": "my_secret_user",
+    }
+    notifier = DiscordNotifier(webhook_url="http://fake.url", secrets=secrets)
+    notifier._send_embed(title="Error sk-or-v1-super-secret-key-12345", description="failed with my_secret_user", color=0xFF0000)
+    
+    mock_post.assert_called_once()
+    _, kwargs = mock_post.call_args
+    desc = kwargs["json"]["embeds"][0]["description"]
+    title = kwargs["json"]["embeds"][0]["title"]
+    
+    assert "sk-or-v1-super-secret-key-12345" not in title
+    assert "my_secret_user" not in desc
+    assert "[REDACTED]" in title
+    assert "[REDACTED]" in desc
+
+
+@patch("requests.post")
+def test_redact_nested_secrets(mock_post):
+    secrets = {
+        "client_secrets": {
+            "client_id": "google-client-id-123.apps.googleusercontent.com",
+            "client_secret": "GOCSPX-secret_abc_123",
+        }
+    }
+    notifier = DiscordNotifier(webhook_url="http://fake.url", secrets=secrets)
+    notifier.notify_failure("vid123", "Upload error", "Failed using google-client-id-123.apps.googleusercontent.com and GOCSPX-secret_abc_123")
+    
+    mock_post.assert_called_once()
+    _, kwargs = mock_post.call_args
+    desc = kwargs["json"]["embeds"][0]["description"]
+    
+    assert "google-client-id-123.apps.googleusercontent.com" not in desc
+    assert "GOCSPX-secret_abc_123" not in desc
+    assert desc.count("[REDACTED]") >= 2
+
+
+@patch("requests.post")
+def test_redact_unix_paths(mock_post):
+    notifier = DiscordNotifier(webhook_url="http://fake.url")
+    notifier.notify_failure("vid123", "Title", "Error at /home/user/project/main.py or /tmp/log.txt")
+    
+    mock_post.assert_called_once()
+    _, kwargs = mock_post.call_args
+    desc = kwargs["json"]["embeds"][0]["description"]
+    
+    assert "/home/user/project/main.py" not in desc
+    assert "/tmp/log.txt" not in desc
+    assert "[REDACTED]" in desc
+
+
+@patch("requests.post")
+def test_redact_windows_paths(mock_post):
+    notifier = DiscordNotifier(webhook_url="http://fake.url")
+    notifier.notify_failure("vid123", "Title", r"Error at C:\Users\username\app\main.py or D:\data\file.txt")
+    
+    mock_post.assert_called_once()
+    _, kwargs = mock_post.call_args
+    desc = kwargs["json"]["embeds"][0]["description"]
+    
+    assert r"C:\Users\username\app\main.py" not in desc
+    assert r"D:\data\file.txt" not in desc
+    assert "[REDACTED]" in desc
+
+
+@patch("requests.post")
+def test_redact_relative_paths(mock_post):
+    notifier = DiscordNotifier(webhook_url="http://fake.url")
+    notifier.notify_failure("vid123", "Title", "Error at ./src/main.py or ../config/settings.json")
+    
+    mock_post.assert_called_once()
+    _, kwargs = mock_post.call_args
+    desc = kwargs["json"]["embeds"][0]["description"]
+    
+    assert "./src/main.py" not in desc
+    assert "../config/settings.json" not in desc
+    assert "[REDACTED]" in desc
+
+
+@patch("requests.post")
+def test_preserve_urls(mock_post):
+    notifier = DiscordNotifier(webhook_url="http://fake.url")
+    notifier.notify_success("vid123", "yt123", "Test Title")
+    
+    mock_post.assert_called_once()
+    _, kwargs = mock_post.call_args
+    desc = kwargs["json"]["embeds"][0]["description"]
+    
+    assert "https://youtube.com/watch?v=yt123" in desc
+
