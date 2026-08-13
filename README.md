@@ -58,8 +58,8 @@ tt2yt is a Python script that allows you to upload TikTok videos directly to You
 > 
 > Example: `yt-dlp --print channel_id https://www.tiktok.com/@vproton0/video/7666384110281215252`
 > 
-> If you dont want to do this, you can just remove the `-tc` flag but
-> it is a LOT better to give channel ID as TikTok may block yt-dlp from scraping your profile
+> If you don't want to do this, you can just remove the `-tc` flag, but
+> it's a lot better to provide a channel ID, as TikTok may block yt-dlp from scraping your profile
 
 3. Run tt2yt:
    ```bash
