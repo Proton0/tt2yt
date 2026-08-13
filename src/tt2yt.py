@@ -98,11 +98,14 @@ class TT2YT:
                                 logger.error(f"Failed to delete slideshow file {downloaded_file}: {e}")
                             continue
 
+                        if "tiktok-only" in title.lower():
+                            logger.info(f"Skipping {video_id} because it has the tiktok-only tag")
                             try:
                                 if downloaded_file and os.path.exists(downloaded_file):
                                     os.remove(downloaded_file)
                             except Exception as e:
                                 logger.error(f"Failed to delete tiktok-only file {downloaded_file}: {e}")
+                            continue
 
                         try:
                             desc = None
