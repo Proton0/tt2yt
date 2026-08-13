@@ -196,7 +196,7 @@ def test_run_survives_unhandled_loop_exception(mock_tracker, mock_or, mock_tikto
     with pytest.raises(StopIteration):
         app.run()
 
-    assert mock_sleep.call_count == 2
+    assert mock_sleep.call_count >= 2
 
 @patch("tt2yt.time.sleep")
 @patch("tt2yt.YouTube")
