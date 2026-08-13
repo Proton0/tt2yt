@@ -178,7 +178,10 @@ def parse_secrets(args: argparse.Namespace) -> dict:
         missing_keys.append("client_secrets_file")
 
     if not secrets.get("tiktok_channel_id") and secrets.get("tiktok_profile"):
-        logger.warning("Channel ID is a lot better than using TikTok Profile.")
+        logger.warning("No channel ID supplied, yt-dlp may fail to fetch your videos")
+
+    if not secrets.get("tiktok_profile"):
+        missing_keys.append("tiktok_profile")
 
     if missing_keys:
         raise RuntimeError(f"Missing required configuration for: {', '.join(missing_keys)}")
