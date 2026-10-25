@@ -1,6 +1,6 @@
-requests~=2.34.2
+requests
 yt-dlp
-curl-cffi~=0.15.0
-google-auth-oauthlib~=1.4.0
-google-api-python-client~=2.198.0
+curl-cffi
+google-auth-oauthlib
+google-api-python-client
 packaging
