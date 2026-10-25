@@ -15,6 +15,8 @@ See the GNU General Public License for more details.
 
 """
 
+from __future__ import annotations
+
 import os
 from pathlib import Path
 
