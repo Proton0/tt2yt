@@ -15,6 +15,8 @@ See the GNU General Public License for more details.
 
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 import re
 from yt_dlp import YoutubeDL
@@ -70,11 +72,11 @@ class TikTok:
 
         try:
             with YoutubeDL(ydl_opts) as ydl:
-                if self.tiktok_profile:
-                    profile_data = ydl.extract_info(f"https://tiktok.com/@{self.tiktok_profile}", download=False)
-                else:
+                if self.tiktok_channel_id:
                     # use the channel id instead of username as yt-dlp recommends using channel id
                     profile_data = ydl.extract_info(f"tiktokuser:{self.tiktok_channel_id}", download=False)
+                else:
+                    profile_data = ydl.extract_info(f"https://tiktok.com/@{self.tiktok_profile}", download=False)
 
 
                 if not profile_data or 'entries' not in profile_data:

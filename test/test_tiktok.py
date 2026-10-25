@@ -66,6 +66,16 @@ def test_tiktok_get_videos_channel_id(mock_ydl_class):
     mock_ydl_instance.extract_info.assert_called_with("tiktokuser:channel123", download=False)
 
 @patch("tiktok.YoutubeDL")
+def test_tiktok_get_videos_prefers_channel_id_over_profile(mock_ydl_class):
+    mock_ydl_instance = mock_ydl_class.return_value.__enter__.return_value
+    mock_ydl_instance.extract_info.return_value = {'entries': []}
+
+    scraper = TikTok("vproton0", "channel123")
+    scraper.get_videos()
+
+    mock_ydl_instance.extract_info.assert_called_with("tiktokuser:channel123", download=False)
+
+@patch("tiktok.YoutubeDL")
 def test_tiktok_get_videos_no_data(mock_ydl_class):
     mock_ydl_instance = mock_ydl_class.return_value.__enter__.return_value
     mock_ydl_instance.extract_info.return_value = None
